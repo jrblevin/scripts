@@ -1,0 +1,28 @@
+#!/bin/bash
+######################################################################
+## Filename:      copycd
+## Description:   Copies an audio cd
+## Author:        Jason R. Blevins <jrblevin@gmail.com>
+## Created:       Fri May 21 22:38:38 2004
+## Modified:      Sat May 22 13:11:22 2004
+######################################################################
+
+read -n 1 -p "Insert an audio cd..."
+mkdir /tmp/burn
+cd /tmp/burn
+cdparanoia -v -B
+read -n 1 -p "Insert a blank disc..."
+cdrecord -v dev=/dev/cdwriter fs=4096k -dao -eject -pad \
+    -audio `ls /tmp/burn/*.wav`
+read -n 1 -p "Remove wav files (Y|N)? " answer
+
+case $answer in
+
+"y"|"Y")
+	rm -rf /tmp/burn
+	;;
+"n"|"N")
+	;;
+*)
+	;;
+esac

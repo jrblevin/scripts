@@ -1,0 +1,4 @@
+#!/bin/sh
+
+TITLE=`zenity --entry --text="Title" --title="Tag Pictures"`
+/home/jrblevin/bin/tagpix --preserve --title "$TITLE" $*

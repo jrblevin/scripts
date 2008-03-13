@@ -1,0 +1,20 @@
+#/bin/sh
+
+# cpp2pdf: Converts C++ files to postscript and pdf for printing.
+#
+# Jason Blevins <jrb11@duke.edu>
+# Durham, November 29, 2005
+
+if [ "$1" == "" ]; then
+    echo "Usage: $0 file.cpp [file2.cpp ...]"
+    exit -1
+fi
+
+for i in $*; do
+    /usr/bin/a2ps --line-numbers=1 --borders=0 -1 --medium=Letter \
+    	--pretty-print=cpp \
+	--header="" --left-title="Jason Blevins" --left-footer="" \
+	--right-footer="" -o $i.ps $i
+    ps2pdf -sPAPERSIZE=letter $i.ps $i.pdf
+done
+

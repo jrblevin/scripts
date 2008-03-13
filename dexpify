@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# dexpify recursively removes Windows XP Thumbs.db files.
+#
+# Usage: dexpify [directory]
+#
+# If directory is omitted, the current directory is assumed.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Durham, May 15, 2005
+
+if [ "$1" == "" ]; then
+    DIR=.
+else
+    DIR=$1
+fi
+
+find $DIR -name "Thumbs.db" -delete
+

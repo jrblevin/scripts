@@ -1,0 +1,4 @@
+#!/bin/sh
+
+KEY=`zenity --entry --text="Remove Keywords (comma separated)" --title="Tag Pictures"`
+/home/jrblevin/bin/tagpix --preserve --unkey "$KEY" $*

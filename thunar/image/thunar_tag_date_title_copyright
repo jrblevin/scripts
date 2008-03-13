@@ -1,0 +1,6 @@
+#!/bin/sh
+
+DATE_ORIG=`zenity --calendar --text="Date Taken" --title="Tag Pictures" --date-format="%Y:%m:%d"`
+DATE_DIG=`zenity --calendar --text="Date Digitized" --title="Tag Pictures" --date-format="%Y:%m:%d"`
+TITLE=`zenity --entry --text="Title" --title="Tag Pictures"`
+/home/jrblevin/bin/tagpix --preserve --copyright --date $DATE_ORIG --digdate $DATE_DIG --title "$TITLE" $*

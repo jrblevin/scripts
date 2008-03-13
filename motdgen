@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# Generates /etc/motd using the Chuck Norris fortune module.  Run as a
+# cron job with root privileges.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Durham, August 11, 2006
+
+uname -a > /etc/motd
+echo -e "\nr o a r k . x b e t a . o r g\n" >> /etc/motd
+echo -e "Chuck Norris Fact of the Day:" >> /etc/motd
+/usr/games/fortune chucknorris >> /etc/motd

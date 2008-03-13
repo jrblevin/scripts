@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# texproj is a LaTeX project management script.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+#
+# Created: Durham, December 6, 2006
+# Last Modified: March 13, 2008 16:07 EDT
+
+# Paths
+TEMPLATEPATH=${HOME}/projects/latex/templates
+TARGETPATH=.
+
+# Templates
+MAKEFILE=Makefile
+HOMEWORK=homework.tex
+LETTER=letter.tex
+BLANK=blank.tex
+DEUTSCH=deutsch.tex
+FOILS=foils.tex
+PSET=pset.tex
+
+# Template Tokens
+MASTER_STR=master_file
+
+usage() {
+    echo "Usage:    texproj [type] <name> <path>"
+    echo "Types:    hw, letter, deutsch, foils, pset, blank"
+    exit 1
+}
+
+newproj() {
+    # Prepare directory
+    echo "Preparing directory..."
+
+    echo "Creating Makefile..."
+    sed "{s/SOURCE = .*/SOURCE = $PROJNAME/}" $TEMPLATEPATH/$MAKEFILE > $TARGETPATH/$MAKEFILE
+
+    echo "Creating tex file..."
+    sed "{s/$TEMPLATE/$PROJNAME.tex/;s/$MASTER_STR/$PROJNAME/}" \
+	$TEMPLATEPATH/$TEMPLATE > $TARGETPATH/$PROJNAME.tex
+
+    echo "Done."
+    exit 1
+}
+
+update() {
+    if [ -f $TARGETPATH/$MAKEFILE ]; then
+	echo "Storing Makefile configuration..."
+	SOURCE=`sed -e '/^SOURCE/ !d; s/^SOURCE = \(.*\)$/\1/' $TARGETPATH/$MAKEFILE`
+	echo "SOURCE = $SOURCE"
+	BIBFILE=`sed -e '/^BIBFILE/ !d; s/^BIBFILE = \(.*\)$/\1/' $TARGETPATH/$MAKEFILE`
+	echo "BIBFILE = $BIBFILE"
+	FIGURES=`sed -e '/^FIGURES/ !d; s/^FIGURES = \(.*\)$/\1/' $TARGETPATH/$MAKEFILE`
+	echo "FIGURES = $FIGURES"
+
+	mv -f -v  $TARGETPATH/$MAKEFILE $TARGETPATH/$MAKEFILE.bak
+
+	echo "Updating Makefile..."
+	sed "{s/^SOURCE = .*/SOURCE = $SOURCE/;s/^BIBFILE = .*/BIBFILE = $BIBFILE/;s/^FIGURES = .*/FIGURES = $FIGURES/}" $TEMPLATEPATH/$MAKEFILE > $TARGETPATH/$MAKEFILE
+    fi
+
+    echo "Done!"
+}
+
+if [ "$2" == "" ]; then
+    PROJNAME=$1
+else
+    PROJNAME=$2
+fi
+
+if [ "$3" == "" ]; then
+    TARGETPATH="."
+else
+    TARGETPATH=$3
+fi
+
+echo $TARGETPATH
+
+case "$1" in
+    hw)
+	TEMPLATE=$HOMEWORK
+	newproj
+	;;
+    letter)
+	TEMPLATE=$LETTER
+	newproj
+	;;
+    deutsch)
+	TEMPLATE=$DEUTSCH
+	newproj
+	;;
+    foils)
+	TEMPLATE=$FOILS
+	newproj
+	;;
+    pset)
+	TEMPLATE=$PSET
+	newproj
+	;;
+    blank)
+	TEMPLATE=$BLANK
+	newproj
+	;;
+    update)
+	update
+	;;
+    *)
+	usage
+	;;
+esac
+
+exit 0

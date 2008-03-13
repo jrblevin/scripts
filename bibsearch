@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# bibsearch
+#
+# A wrapper script to bibtool to facilitate regular expression
+# searching.  Based on a script of the same name by Arthur van Dam
+# (http://arthur.van-dam.net/twiki/bin/view/Arthur/ScientificWriting).
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+#
+# Created: Durham, June 21, 2006
+
+bibtool -r auxextract -- "select{\"$*\"}"

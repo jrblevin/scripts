@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Backs up home directories on roark.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Durham, March 25, 2005
+
+HOME=/home
+BACKUP_DIR=/backup
+BACKUP_DEV=/dev/hdb1
+RSYNC_OPTS="-av --delete --exclude=lost+found"
+
+echo "Mounting filesystem: $BACKUP_DEV on $BACKUP_DIR"
+mount $BACKUP_DEV $BACKUP_DIR
+
+echo "Backing up files: roark:/home -> roark:/home-backup"
+rsync $RSYNC_OPTS $HOME $BACKUP_DIR
+
+echo "Unmounting filesystem..."
+umount $BACKUP_DEV
+

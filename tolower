@@ -1,0 +1,79 @@
+#!/usr/bin/perl -w
+
+# tolower converts a list of given filenames to lowercase.  Optionally
+# converts spaces and "%20" to underscores and removes punctuation
+# characters such as periods, commas, and question marks.
+#
+# Copyright (C) 2005-2006 Jason Blevins <jrblevin@sdf.lonestar.org>
+#
+# Created: Durham, August 2, 2005
+# Last Modified: March 13, 2008 16:09 EDT
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+use strict;
+use Getopt::Std;
+
+our($opt_h, $opt_v, $opt_s, $opt_p, $opt_e);
+
+getopts('esphv');
+
+if ($opt_h) {
+    print_usage();
+    exit();
+}
+
+if (defined $opt_p & defined $opt_e) {
+    print "Warning: Both -p and -e were given, assuming -p.\n"
+}
+
+foreach (@ARGV) {
+    my($extension, $original_filename, $new_filename);
+
+    $original_filename = $_;
+
+    # Print filename if verbosity requested
+    if ($opt_v) { print "$_ -> " };
+
+    # Convert to lower case
+    s/(\w)/\L$1/g;
+
+    if ($opt_s) {
+        s/ /_/g;
+        s/%20/_/g;
+    }
+    # Store the extension if -p is given
+    if ($opt_p) {
+        s#^(.*)\.(\w+)$#$1#;
+        $extension = $2;
+    }
+    if (defined $opt_p | defined $opt_e) {
+        s#[^\w -]+##g;
+    }
+
+    $new_filename = $_;
+    if (defined $opt_p & defined $extension) { $new_filename .= ".$extension"; }
+    if ($opt_v) { print "$new_filename\n"; }
+
+    # Rename the file
+    rename $original_filename, $new_filename;
+}
+
+
+sub print_usage {
+    my $usage = "usage: tolower [options] file_1 [file_2 ...]\n\n" .
+      "options:\n\t-h\tdisplay help\n\t-v\tbe verbose\n" .
+      "\t-s\tconvert space and \"%20\" to underscore\n" .
+      "\t-p\tremove punctuation (preserves extensions)\n" .
+      "\t-e\tremove punction (no extensions)\n\n" .
+      "note: -p and -e remove all characters except letters, numbers, \"-\", and \"_\".\n";
+    print $usage;
+}

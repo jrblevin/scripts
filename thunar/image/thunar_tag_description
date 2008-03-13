@@ -1,0 +1,6 @@
+#!/bin/sh
+
+for i in $*; do
+    DESCRIPTION=`zenity --entry --width=500 --text="Description for $i:" --title="Tag: Description"`
+    /home/jrblevin/bin/tagpix --preserve --description "$DESCRIPTION" $i
+done

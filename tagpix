@@ -1,0 +1,184 @@
+#!/usr/bin/perl -w
+
+# tagpix: Uses exiftool to tag pictures with copyright, date,
+# and other metadata.
+#
+# Jason R. Blevins <jrblevin@sdf.lonestar.org>
+# Durham, January 8, 2007
+
+use strict;
+use warnings;
+use POSIX;
+use Getopt::Long;
+
+# Borrowed from jwz
+my $progname = $0; $progname =~ s@.*/@@g;
+my $version = q{ $Revision: 1.4 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+
+my $name = 'Jason R. Blevins';
+my $email = 'jrblevin@sdf.lonestar.org';
+my $url = 'http://jblevins.org/';
+my $copyright = "";
+
+main();
+
+sub error {
+  ($_) = @_;
+  print STDERR "$progname: $_\n";
+  exit 1;
+}
+
+sub usage {
+    print STDERR "usage: $progname [--verbose] [--date YYYY:MM:DD] " .
+      " [--year YYYY] " .
+      " [--dig-date YYYY:MM:DD] [--title TITLE] [--preserve] " .
+      " file1 file2 ...\n";
+    exit 1;
+}
+
+sub tag_image {
+    my ($file, $date, $digdate, $title, $verbose, $preserve, $opt_copyright,
+        $opt_key, $opt_unkey, $opt_description) = @_;
+    my ($opt, $date_opt, $dig_opt, $copy_opt, $desc_opt, $title_opt);
+    my ($key_opt, $unkey_opt, $description_opt);
+    my $time_v = time;
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time_v);
+    $year += 1900;
+    my $now_date = sprintf("%04d:%02d:%02d %02d:%02d:%02d",
+                           $year, $mon + 1, $mday, $hour, $min, $sec);
+
+    $opt = "-overwrite_original " .
+           "-XMP-xmp:MetadataDate=\"$now_date\" " .
+           "-EXIF:ModifyDate=\"$now_date\"";
+
+    my $do_write = 0;
+
+    if (!$verbose) {
+        $opt .= " -q ";
+    }
+
+    if ($preserve) {
+        $opt .= " -P ";
+    }
+
+    if ($date) {
+        $date_opt = "-XMP-dc:Date=\"$date\" " .
+                    "-XMP-exif:DateTimeOriginal=\"$date\" " . 
+                    "-XMP-xmp:CreateDate=\"$date\" " . 
+                    "-IPTC:DateCreated=\"$date\" " .
+                    "-EXIF:DateTimeOriginal=\"$date\"";
+        $do_write = 1;
+    } else {
+	$date_opt = "";
+    }
+
+    if ($digdate) {
+        $dig_opt = "-XMP-exif:DateTimeDigitized=\"$digdate\" " .
+                   "-IPTC:DigitalCreationDate=\"$digdate\" " .
+                   "-EXIF:CreateDate=\"$digdate\"";
+        $do_write = 1;
+    } else {
+	$dig_opt = "";
+    }
+
+    if ($title) {
+        $title_opt = "-XMP-dc:Title=\"$title\" " . 
+                     "-IPTC:ObjectName=\"$title\" " .
+                     "-EXIF:DocumentName=\"$title\"";
+        $do_write = 1;
+    } else {
+	$title_opt = "";
+    }
+
+    if ($opt_copyright) {
+	$copy_opt = "-XMP-dc:Creator=\"$name\" " .
+	            "-XMP-dc:Publisher=\"$name\" " .
+                    "-XMP-dc:Rights=\"$copyright\" " .
+                    "-XMP-iptcCore:CreatorContactInfoCiEmailWork=\"$email\" " .
+                    "-XMP-iptcCore:CreatorContactInfoCiUrlWork=\"$url\" " .
+                    "-XMP-xmpRights:Marked=\"True\" " .
+                    "-IPTC:By-line=\"$name\" " .
+                    "-IPTC:CopyrightNotice=\"$copyright\" " .
+                    "-IPTC:Contact=\"$email\" " .
+                    "-EXIF:Artist=\"$name\" " .
+                    "-EXIF:Copyright=\"$copyright\"";
+        $do_write = 1;
+    } else {
+	$copy_opt = "";
+    }
+
+    if ($opt_key) {
+	$key_opt = "-XMP-dc:Subject+=\"$opt_key\" " .
+                   "-IPTC:Keywords+=\"$opt_key\"";
+	$do_write = 1;
+    } else {
+	$key_opt = "";
+    }
+
+    if ($opt_unkey) {
+	$unkey_opt = "-XMP-dc:Subject-=\"$opt_unkey\" " .
+                   "-IPTC:Keywords-=\"$opt_unkey\"";
+	$do_write = 1;
+    } else {
+	$unkey_opt = "";
+    }
+
+    if ($opt_description) {
+	$description_opt = "-XMP-dc:Description=\"$opt_description\" " .
+	    "-IPTC:Caption-Abstract=\"$opt_description\" " .
+	    "-EXIF:ImageDescription=\"$opt_description\" " .
+	    "-Comment=\"$opt_description\"";
+	$do_write = 1;
+    } else {
+	$description_opt = "";
+    }
+
+    if ($do_write) {
+	my $command = "exiftool $opt $copy_opt $date_opt $dig_opt $title_opt "
+	    . " $key_opt $unkey_opt $description_opt $file";
+	if ($verbose) {
+	    print STDERR "running: $command\n";
+	}
+	system $command;
+    } else {
+	if ($verbose) {
+	    print STDERR "Nothing to do!\n";
+	}
+    }
+}
+
+sub main {
+
+    my $file;
+    our($opt_verbose, $opt_date, $opt_digdate, $opt_title,
+        $opt_copyright, $opt_preserve, $opt_year, $opt_key,
+        $opt_unkey, $opt_description);
+
+    $opt_verbose = 0;
+    $opt_preserve = 0;
+    $opt_year = 1900 + (localtime(time))[5];
+
+    GetOptions ('verbose' => \$opt_verbose,
+                'date=s' => \$opt_date,
+		'digdate=s' => \$opt_digdate,
+                'title=s' => \$opt_title,
+                'copyright' => \$opt_copyright,
+                'preserve' => \$opt_preserve,
+                'year=i' => \$opt_year,
+                'key=s' => \$opt_key,
+                'unkey=s' => \$opt_unkey,
+                'description=s' => \$opt_description
+      );
+
+
+    $copyright = "Copyright (c) $opt_year $name";
+
+    # Process the remaining files
+    foreach $file (@ARGV) {
+        tag_image($file, $opt_date, $opt_digdate, $opt_title,
+                  $opt_verbose, $opt_preserve, $opt_copyright,
+                  $opt_key, $opt_unkey, $opt_description);
+    }
+
+}
+

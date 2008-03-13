@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# demacify recursively removes hidden MacOS files.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Durham, March 29, 2005
+
+if [ "$1" == "" ]; then
+    DIR=.
+else
+    DIR=$1
+fi
+
+for i in `find $DIR/ | grep ".DS_Store"`; do
+    rm -v $i;
+done
+

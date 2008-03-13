@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# onpoint: Downloads and tags the current day's On Point podcasts.
+#
+# Format:
+#
+#   http://www.bu.edu/wbur/podcasts/2006/01/onpointa_0118.mp3
+#   http://www.bu.edu/wbur/podcasts/2006/01/onpointb_0118.mp3
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Durham, August 17, 2005
+
+BASEURL=http://www.bu.edu/wbur/podcasts
+DATEPATH=`date +%Y`/`date +%m`
+FILEA=onpointa_`date +%m%d`.mp3
+FILEB=onpointb_`date +%m%d`.mp3
+OUTFILEA=onpoint-`date +%Y%m%d`a.mp3
+OUTFILEB=onpoint-`date +%Y%m%d`b.mp3
+OUTDIR=/archive/media/music/onpoint
+
+wget -nv ${BASEURL}/${DATEPATH}/${FILEA} -O ${OUTDIR}/${OUTFILEA}
+
+id3v2 -t "On Point: `date +\"%a %e %b %Y\"` (1)" \
+    -a "Tom Ashbrook" -A "On Point" -y `date +%Y` -g 12 \
+    -T 1 -c "" ${OUTDIR}/${OUTFILEA}
+
+wget -nv ${BASEURL}/${DATEPATH}/${FILEB} -O ${OUTDIR}/${OUTFILEB}
+
+id3v2 -t "On Point: `date +\"%a %e %b %Y\"` (2)" \
+    -a "Tom Ashbrook" -A "On Point" -y `date +%Y` -g 12 \
+    -T 2 -c "" ${OUTDIR}/${OUTFILEB}
+

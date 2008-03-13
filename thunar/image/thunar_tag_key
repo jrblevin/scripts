@@ -1,0 +1,4 @@
+#!/bin/sh
+
+KEY=`zenity --entry --text="Keywords (comma separated)" --title="Tag Pictures"`
+/home/jrblevin/bin/tagpix --preserve --key "$KEY" $*

@@ -1,0 +1,157 @@
+#!/bin/bash
+
+# xsync synchronizes data between various machines and devices via
+# rsync.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+#
+# Created: Durham, December 2, 2006
+# Last Modified: March 13, 2008 16:10 EDT
+
+# Master Server
+MASTER_HOST=roark.no-ip.org
+MASTER_USER=jrblevin
+
+# Master Paths
+MASTER_HOME=/home/jrblevin
+MASTER_DATA_PATH=${MASTER_HOME}/data
+MASTER_PROJECTS_PATH=${MASTER_DATA_PATH}/projects
+MASTER_ARCHIVE_PATH=/archive
+MASTER_LIBRARY_PATH=${MASTER_ARCHIVE_PATH}/library
+MASTER_CONFIG_PATH=${MASTER_DATA_PATH}/computer/config
+MASTER_INBOX_PATH=${MASTER_DATA_PATH}/inbox
+
+# Duke Economics
+ECON_HOST=hansolo.econ.duke.edu
+ECON_USER=jrb11
+ECON_PROJECTS_PATH=/home/j/jrb11/projects
+
+# Local Host
+HOSTNAME=`hostname`
+DATA_PATH=${HOME}/data
+PROJECTS_PATH=${HOME}/data/projects
+CONFIG_PATH=${HOME}/config
+ARCHIVE_PATH=/archive
+LIBRARY_PATH=${ARCHIVE_PATH}/library
+INBOX_PATH=${HOME}/inbox
+
+# USB OPTIONS
+USB_PATH=${HOME}/usb
+USB_PROJECTS=${USB_PATH}/projects
+USB_CONFIG=${USB_PATH}/config
+USB_INBOX=${USB_PATH}/inbox
+
+# Log options
+LOG_DIR=${HOME}/data
+LOG_FILE=${LOG_DIR}/log.txt
+
+# RSYNC OPTIONS
+#
+# Note that -a is the same as -rlptgoD (recurse, copy symlinks as symlinks,
+# perms, times, group, owner, devices).  -P is for progress, -u for update,
+# -v for verbosity).
+RSYNC=rsync
+RSYNC_LOCAL_OPTS="-avP --delete"
+RSYNC_REMOTE_OPTS="-avzP -e ssh --delete"
+
+# METHOD SELECTION
+case "$1" in
+    # USB
+    getusb)
+	echo -e "Synchronizing data: vault -> $HOSTNAME...\n"
+	echo -e "\n***** PROJECTS *****\n\n"
+	$RSYNC $RSYNC_LOCAL_OPTS $USB_PROJECTS/ $PROJECTS_PATH
+	echo -e "\n***** CONFIG *****\n\n"
+	$RSYNC $RSYNC_LOCAL_OPTS $USB_CONFIG/ $CONFIG_PATH
+	echo -e "\n***** INBOX *****\n\n"
+	$RSYNC $RSYNC_LOCAL_OPTS $USB_INBOX/ $INBOX_PATH
+	# Add an entry to the log file
+	echo "`date` vault -> $HOSTNAME" >> $LOG_FILE
+	;;
+    putusb)
+	echo -e "Synchronizing data: $HOSTNAME -> vault...\n"
+	echo -e "\n***** PROJECTS *****\n\n"
+	$RSYNC $RSYNC_LOCAL_OPTS $PROJECTS_PATH/ $USB_PROJECTS
+	echo -e "\n***** CONFIG *****\n\n"
+	$RSYNC $RSYNC_LOCAL_OPTS $CONFIG_PATH/ $USB_CONFIG
+	echo -e "\n***** INBOX *****\n\n"
+	$RSYNC $RSYNC_LOCAL_OPTS $INBOX_PATH/ $USB_INBOX
+	# Add an entry to the log file
+	echo "`date` $HOSTNAME -> usb" >> $LOG_FILE
+	;;
+    put)
+	echo -e "Synchronizing data: $HOSTNAME -> master...\n"
+	echo -e "\n***** PROJECTS *****\n\n"
+	$RSYNC $RSYNC_REMOTE_OPTS $PROJECTS_PATH/ $MASTER_USER@$MASTER_HOST:$MASTER_PROJECTS_PATH
+	echo -e "\n***** CONFIG *****\n\n"
+	$RSYNC $RSYNC_REMOTE_OPTS $CONFIG_PATH/ $MASTER_USER@$MASTER_HOST:$MASTER_CONFIG_PATH
+	echo -e "\n***** INBOX *****\n\n"
+	$RSYNC $RSYNC_REMOTE_OPTS $INBOX_PATH/ $MASTER_USER@$MASTER_HOST:$MASTER_INBOX_PATH
+	# Add an entry to the log file
+	echo "`date` $HOSTNAME -> master" >> $LOG_FILE
+	;;
+    get)
+	echo -e "Synchronizing data: master -> $HOSTNAME...\n"
+	echo -e "\n***** PROJECTS *****\n\n"
+	$RSYNC $RSYNC_REMOTE_OPTS $MASTER_USER@$MASTER_HOST:$MASTER_PROJECTS_PATH/ $PROJECTS_PATH
+	echo -e "\n***** CONFIG *****\n\n"
+	$RSYNC $RSYNC_REMOTE_OPTS $MASTER_USER@$MASTER_HOST:$MASTER_CONFIG_PATH/ $CONFIG_PATH
+	echo -e "\n***** INBOX *****\n\n"
+	$RSYNC $RSYNC_REMOTE_OPTS $MASTER_USER@$MASTER_HOST:$MASTER_INBOX_PATH/ $INBOX_PATH
+	# Add an entry to the log file
+	echo "`date` master -> $HOSTNAME" >> $LOG_FILE
+	;;
+    # Transfer specific projects
+    getproj)
+	echo "Synchronizing project $2 from ${MASTER_HOST}..."
+	$RSYNC $RSYNC_REMOTE_OPTS $MASTER_USER@$MASTER_HOST:$MASTER_PROJECTS_PATH/$2 $PROJECTS_PATH
+	;;
+    putproj)
+	echo "Synchronizing project $2 to ${MASTER_HOST}..."
+	$RSYNC $RSYNC_REMOTE_OPTS $PROJECTS_PATH/$2 $MASTER_USER@$MASTER_HOST:$MASTER_PROJECTS_PATH
+	;;
+    econputproj)
+	echo "Synchronizing project $2 to ${ECON_HOST}..."
+	$RSYNC $RSYNC_REMOTE_OPTS $PROJECTS_PATH/$2/ $ECON_USER@$ECON_HOST:$ECON_PROJECTS_PATH/$2
+	;;
+    # Transfer specific branches
+    projects)
+        echo "Synchronizing from ${MASTER_HOST}..."
+        echo ">>>>>>>>>>>>>>>>>>>> PROJECTS <<<<<<<<<<<<<<<<<<<<"
+        $RSYNC $RSYNC_REMOTE_OPTS \
+	    $MASTER_USER@$MASTER_HOST:$MASTER_PROJECTS_PATH/ $PROJECTS_PATH/
+	;;
+    projects)
+        echo "Synchronizing from ${MASTER_HOST}..."
+        echo ">>>>>>>>>>>>>>>>>>>> CONFIG <<<<<<<<<<<<<<<<<<<<"
+        $RSYNC $RSYNC_REMOTE_OPTS \
+	    $MASTER_USER@$MASTER_HOST:$MASTER_CONFIG_PATH/ $CONFIG_PATH/
+	;;
+    data)
+        echo "Synchronizing from ${MASTER_HOST}..."
+        echo ">>>>>>>>>>>>>>>>>>>> DATA <<<<<<<<<<<<<<<<<<<<"
+        $RSYNC $RSYNC_REMOTE_OPTS \
+	    $MASTER_USER@$MASTER_HOST:$MASTER_DATA_PATH/ $DATA_PATH/
+	;;
+    library)
+        echo "Synchronizing from ${MASTER_HOST}..."
+        echo -e "\n>>>>>>>>>>>>>>>>>>>> LIBRARY <<<<<<<<<<<<<<<<<<<<\n"
+        $RSYNC $RSYNC_REMOTE_OPTS \
+	    $MASTER_USER@$MASTER_HOST:$MASTER_LIBRARY_PATH/ $LIBRARY_PATH/
+	echo "`date` $MASTER_HOST -> $HOSTNAME" >> $LOG_FILE
+        ;;
+    archive)
+        echo "Synchronizing from ${MASTER_HOST}..."
+        echo -e "\n>>>>>>>>>>>>>>>>>>>> ARCHIVE <<<<<<<<<<<<<<<<<<<<\n"
+        $RSYNC $RSYNC_REMOTE_OPTS \
+	    $MASTER_USER@$MASTER_HOST:$MASTER_ARCHIVE_PATH/ $ARCHIVE_PATH/
+	echo "`date` $MASTER_HOST -> $HOSTNAME" >> $LOG_FILE
+        ;;
+    gauss-put)
+	echo -e "Synchronizing data: $HOSTNAME -> gauss.xbeta.org...\n"
+	echo -e "\n***** CONFIG *****\n\n"
+	$RSYNC -avzP -e ssh --delete $CONFIG_PATH/gauss/ gauss.xbeta.org:$CONFIG_PATH/gauss/
+	# Add an entry to the log file
+	echo "`date` $HOSTNAME -> gauss (config only)" >> $LOG_FILE
+	;;
+esac

@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Columns
+col_group=1
+col_site=2
+col_uri=3
+col_user=4
+col_pass=5
+col_date=6
+col_comment=7
+
+pwsafe_flat=~/config/private/pwsafe
+pwsafe_gpg=~/config/private/pwsafe.gpg
+
+decrypt="gpg -d $pwsafe_gpg"
+
+function create_db {
+    touch $pwsafe_flat
+    gpg -e --default-recipient-self $pwsafe_flat
+}
+
+function sort_changed {
+    $decrypt | sort -k6 -r | awk '{print $1 "." $2 "\t" $6}'
+}
+
+function find_site {
+    line=`$decrypt | grep $1 | head -n 1`
+    echo $line | awk '{print $5}' | xclip -i
+    echo $line | awk '{print $1 "." $2}'
+    line=''
+}
+
+#sort_changed
+find_site $1

@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# Get an extended Kerberos ticket and extend the AFS token lifetime.
+#
+# deej - 17 Aug 2005
+# jrblevin - 22 Jan 2007
+
+if [ "$1" == "" ] ;
+then
+	echo "Usage is: extend_token XXd"
+	echo "where XX is the number of days from 1 to 30".
+	echo "Example: extend_token 7d will extend the token for 7 days."
+	exit 1;
+fi
+/usr/bin/kinit -l $1 
+/usr/bin/aklog

@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# Checks out a file using RCS and stores the timestamp.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+
+touch -r $1 .$1.time
+co -l $1

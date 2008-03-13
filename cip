@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Checks in a file using RCS and restores the timestamp (assuming the
+# file was checked out using the corresponding script cop).
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+
+ci -u $1
+touch -r .$1.time $1
+rm .$1.time

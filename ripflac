@@ -1,0 +1,3 @@
+#!/bin/sh
+rip -c -f "%N %S" --flac -n --tag
+

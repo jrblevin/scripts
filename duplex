@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# duplex: A manual duplex printing script.  Currently works only
+# with PDF files.  Requires pdftops and psselect, part of the
+# psutils Debian package.
+#
+# Usage: duplex document.pdf
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Durham, March 30, 2006
+
+echo "Printing even pages..."
+pdftops $1 - | psselect -e | lpr
+read -n 1 -p "Press a key to print odd pages..."
+pdftops $1 - | psselect -o | lpr
+

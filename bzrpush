@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# bzrpush generates an Atom feed, index.atom, using bzr-feed and pushes
+# the resulting branch and feed to a remote server to be hosted at
+# http://code.jblevins.org/.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+#
+# Created: Durham, January 1, 2008
+# Last Modified: March 13, 2008 16:03 EDT
+#
+#
+# Caveat: the local directory name should be the same as that on the
+# server for bzr-feed to work properly.  Also, trailing slashes should
+# be omitted.
+#
+# Usage:
+# 
+#     $ cd /home/jrblevin/projects
+#     $ bzrpush project
+
+PROJECT=$1
+BZRFEED=/home/jrblevin/projects/bzr-feed/bzr-feed/bzr-feed.py
+
+export HTTP_HOST=code.jblevins.org
+export SERVER_PORT=80
+export REQUEST_URI="/$PROJECT/index.atom"
+
+python $BZRFEED dir=$PROJECT > $PROJECT/index.atom
+rsync -avz --delete -e ssh $PROJECT/ gauss.xbeta.org:/home/jrblevin/bzr/$PROJECT/

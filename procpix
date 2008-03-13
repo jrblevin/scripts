@@ -1,0 +1,110 @@
+#!/usr/bin/perl -w
+#
+# Takes a list of image files and processes them according to
+# the following options:
+#
+#   --web        Generates thumbnails (max 100x75),
+#                small images (max 600x400), and
+#                large images (max 800x600).
+#
+#   --gallery    Converts files to JPEG and copies them to ./gallery/.
+#
+#   --meta       Copy metadata from originals to processe images.
+#
+#   --verbose    Print details about processing steps.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Durham, January 9, 2006
+
+use strict;
+use warnings;
+use POSIX;
+use Getopt::Long;
+use File::Basename;
+
+my $convert = "convert -quality 85";
+my $exiftool = "exiftool -overwrite_original -P";
+my $web_dir = "web";
+my $gallery_dir = "gallery";
+
+my ($file, $target, $cmd);
+my ($opt_verbose, $opt_thumb, $opt_web, $opt_gallery, $opt_meta);
+
+# Figure out what to do
+GetOptions ('verbose'  => \$opt_verbose,
+            'web'      => \$opt_web,
+            'gallery'  => \$opt_gallery,
+            'meta'     => \$opt_meta
+);
+
+# Create directories
+if ($opt_web) {
+    if ($opt_verbose) {
+        print "Creating directory $web_dir\n";
+    }
+    mkdir $web_dir;
+}
+if ($opt_gallery) {
+    if ($opt_verbose) {
+        print "Creating directory $gallery_dir\n";
+    }
+    mkdir $gallery_dir;
+}
+
+my $count = 0;
+
+# Process files
+for $file (@ARGV) {
+
+    $count = $count + 1;
+
+    if ($opt_verbose) {
+        print "$file\n";
+    }
+
+    # Base filename
+    my ($base, $dir, $ext) = fileparse($file,'\..*');
+    if (!$base) {
+        $base = sprintf("proc%04d", $count);
+    }
+
+    # Convert to JPEG
+    if ($ext ne ".jpg") {
+	$target = $dir . $base . ".jpg";
+	convert_picture($file, $target);
+    }
+
+    # Gallery
+    if ($opt_gallery) {
+      system "cp $dir$base.jpg $gallery_dir/$base.jpg";
+    }
+
+    # Web
+    if ($opt_web) {
+        $target = $web_dir . "/" . $base . "lg.jpg";
+        convert_picture($file, $target, "800x600");
+        $target = $web_dir . "/" . $base . "sm.jpg";
+        convert_picture($file, $target, "600x400");
+        $target = $web_dir . "/" . $base . "th.jpg";
+        convert_picture($file, $target, "100x75");
+    }
+}
+
+sub convert_picture {
+    my ($file, $target, $dim) = @_;
+    my $convert_opts = "-unsharp 10x0.5+1.0+0.05";
+
+    if ($dim) {
+      $convert_opts .= " -resize $dim\\>";
+    }
+
+    $cmd = "$convert $convert_opts $file $target";
+    if ($opt_verbose) { print "running $cmd\n"; }
+    system $cmd;
+    if ($opt_meta) {
+        $cmd = "$exiftool -TagsFromFile $file -all:all $target";
+        if ($opt_verbose) { print "running $cmd\n"; }
+        system $cmd;
+    }
+}
+

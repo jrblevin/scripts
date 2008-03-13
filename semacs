@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# From Linux Gazette Issue #8 Mailbag
+# http://linuxgazette.net/issue01to08/mailbag_issue8.html
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Durham, January 17, 2006
+
+EMACSCLIENT=/usr/bin/emacsclient
+EMACS=/usr/bin/emacs
+
+NUMEMACS=0
+NUMEMACS=`ps ux | grep emacs | grep -v semacs | grep -v grep | wc -l`
+
+echo "$NUMEMACS instances of emacs are running."
+
+if [ $NUMEMACS -gt 0 ]
+then
+    echo "Starting emacsclient..."
+    $EMACSCLIENT -a $EMACS $*
+else
+    echo "Starting emacs..."
+    $EMACS $*
+fi
+
