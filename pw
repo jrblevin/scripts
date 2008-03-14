@@ -1,34 +1,219 @@
 #!/bin/bash
 
-# Columns
-col_group=1
-col_site=2
-col_uri=3
-col_user=4
-col_pass=5
-col_date=6
-col_comment=7
+# Password management script.
+#
+# The pwsafe file is a whitespace-delimited file where each line is of
+# the form:
+#
+#     site username password date comment
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Chapel Hill, March 13, 2008
 
-pwsafe_flat=~/config/private/pwsafe
-pwsafe_gpg=~/config/private/pwsafe.gpg
+# Location of password file
+if [[ -n $PW_FILE ]]; then
+    pwfile=$PW_FILE
+else
+    pwfile=$HOME/.pwfile.gpg
+fi
 
-decrypt="gpg -d $pwsafe_gpg"
+# Password length
+if [[ -n $PW_LEN ]]; then
+    length=$PW_LEN
+else
+    length=16
+fi
 
-function create_db {
-    touch $pwsafe_flat
-    gpg -e --default-recipient-self $pwsafe_flat
+# Common commands
+decrypt="gpg --quiet --no-verbose --batch --passphrase-fd 0 --decrypt $pwfile"
+
+
+# Print usage and exit.
+function usage {
+    script=`basename $0`
+    echo "usage: $script [options] <regexp>
+
+Commands:
+
+  -p      Obtain the password for the site that matches regexp (default).
+
+  -a      Add a new site to the database.
+  -c      Creates an empty database, overwriting any existing data.
+  -d      List all sites sorted by date of last update.
+  -g      Generate a random password and copy it to the clipboard.
+  -h      Print usage and exit.
+  -l      List the sites that match regexp.
+  -u      Obtain the username for the site that matches regexp.
+
+Options:
+
+  -v      Be verbose and additional information.
+  -n N    Generate passwords of length N (1 <= N <= 60).
+"
 }
 
+
+# Generate a random password of length $length.
+function generate {
+#    apg -a 1 -n 1 -M NCL -m 16 -x 16
+    pass=`dd if=/dev/urandom count=1 2> /dev/null | uuencode -m - | sed -ne 2p | cut -c-$length`
+}
+
+
+# Initialize an empty password database.
+function encrypt_db {
+    # Shred the database if it exists.
+    if [[ -f $pwfile ]]; then
+        shred --zero --remove $pwfile
+    fi
+
+    # Encrypt the new database.
+    gpg --quiet --no-verbose --batch --default-recipient-self \
+        --encrypt -o $pwfile $1 >& /dev/null
+
+    # Shred the temporary file.
+    shred --zero --remove $1
+}
+
+
+# Print sites sorted by the date the password was last changed.
 function sort_changed {
-    $decrypt | sort -k6 -r | awk '{print $1 "." $2 "\t" $6}'
+    echo $password | $decrypt | sort -k4 | awk '{print $4 "\t" $1}'
 }
 
+
+# Perform a regexp search for a site.  Copy the password of the first
+# site found to the clipboard and, optionally, print it.
 function find_site {
-    line=`$decrypt | grep $1 | head -n 1`
-    echo $line | awk '{print $5}' | xclip -i
-    echo $line | awk '{print $1 "." $2}'
-    line=''
+    # Decrypt pwfile, regexp-search for $1, and split the first result.
+    items=( $( echo $password | $decrypt | grep $1 | head -n 1 ) )
+
+    if [[ -n $opt_verbose ]]; then
+        # Print the metadata: group.site, uri
+        echo "site: ${items[0]}"
+        echo "date: ${items[3]}"
+        echo "comment: ${items[@]:4}"
+        echo "username: ${items[1]}"
+    fi
+
+    if [[ -n $opt_username ]]; then
+        clipboard ${items[1]}
+        echo -n "Username copied to clipboard."
+    fi
+
+    if [[ -n $opt_password ]]; then
+        if [[ -n $opt_username ]]; then
+            read -p "  Press any key to continue." -n 1
+        fi
+
+        # Copy the password to the clipboard
+        clipboard ${items[2]}
+        echo -e "Password copied to clipboard."
+    fi
 }
 
-#sort_changed
-find_site $1
+
+function add_site {
+    # Prompt for information
+    read -p "site: " site
+    read -p "user: " user
+
+    # Generate a random password or prompt for one.
+    read -p "Random password? [y/n] " -n 1 yesno && echo
+    if [[ "$yesno" = "y" ]]; then
+        generate
+        clipboard $pass
+        echo "Random ${length}-character password copied to clipboard."
+        [[ -n $opt_verbose ]] && echo "$pass";
+    else
+        read -s -p "password: " pass
+        echo
+    fi
+
+    read -p "comment: " comment
+    date=`date +%Y-%m-%d`
+
+    # Decrypt to a temporary file.
+    tempfile=`tempfile --mode 600`
+    echo $password | $decrypt > $tempfile
+
+    # Add the new entry.
+    echo "$site $user $pass $date $comment" >> $tempfile
+
+    # Encrypt the database.
+    encrypt_db $tempfile
+}
+
+
+# Obtain a list of sites that match regexp.
+function filter {
+    # Decrypt pwfile and regexp-search for $1
+    echo $password | $decrypt | awk '{print $1}' | grep $1
+}
+
+
+# Store the given text in the clipboard
+function clipboard {
+    echo -n $@ | xclip
+    xclip -o | xclip -sel clip
+}
+
+
+# Process command-line arguments
+while getopts "acdghln:puv" flag; do
+    case "$flag" in
+        a) opt_add=on;;
+        c) opt_create_db=on;;
+        d) opt_sort=on;;
+        g) opt_generate=on;;
+        h) usage && exit 0;;
+        l) opt_filter=on;;
+        n) length=$OPTARG;;
+        p) opt_password=on;;
+        u) opt_username=on;;
+        v) opt_verbose=on;;
+        \?)
+      	  echo >&2 && usage
+	  exit 1;;
+    esac
+done
+
+# So that $1, $2, ... refer to stuff after the flags.
+shift $(($OPTIND - 1))
+
+# Stuff that does not require a password
+if [[ -n $opt_generate ]]; then
+    # Generate a random password.
+    generate
+    clipboard $pass
+    echo "Random ${length}-character password generated and copied to clipboard."
+    [[ -n $opt_verbose ]] && echo "$pass";
+    exit
+fi
+
+# Ask for the password and proceed
+read -s -p "Master password: " password
+echo
+if [[ -n $opt_add ]]; then
+    add_site
+elif [[ -n $opt_create_db ]]; then
+    if [[ -f $pwfile ]]; then
+        read -p "Database already exists, continue? [y/n] " -n 1 yesno
+        echo
+        [[ "$yesno" != "y" ]] && exit
+    fi
+    temp=`tempfile --mode 600`
+    touch $temp
+    encrypt_db $temp
+elif [[ -n $opt_sort ]]; then
+    sort_changed
+elif [[ -n $opt_filter ]]; then
+    [[ $# -eq 0 ]] && usage && exit 0
+    filter $1
+elif [[ -n $opt_username ]]; then
+    find_site $1
+else
+    [[ $# -eq 0 ]] && usage && exit 0
+    opt_password=on;
+    find_site $1
+fi
