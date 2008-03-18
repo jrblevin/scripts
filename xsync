@@ -6,7 +6,7 @@
 # Jason Blevins <jrblevin@sdf.lonestar.org>
 #
 # Created: Durham, December 2, 2006
-# Last Modified: March 13, 2008 16:10 EDT
+# Last Modified: March 18, 2008 18:44 EDT
 
 # Master Server
 MASTER_HOST=roark.no-ip.org
@@ -147,11 +147,4 @@ case "$1" in
 	    $MASTER_USER@$MASTER_HOST:$MASTER_ARCHIVE_PATH/ $ARCHIVE_PATH/
 	echo "`date` $MASTER_HOST -> $HOSTNAME" >> $LOG_FILE
         ;;
-    gauss-put)
-	echo -e "Synchronizing data: $HOSTNAME -> gauss.xbeta.org...\n"
-	echo -e "\n***** CONFIG *****\n\n"
-	$RSYNC -avzP -e ssh --delete $CONFIG_PATH/gauss/ gauss.xbeta.org:$CONFIG_PATH/gauss/
-	# Add an entry to the log file
-	echo "`date` $HOSTNAME -> gauss (config only)" >> $LOG_FILE
-	;;
 esac
