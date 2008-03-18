@@ -20,7 +20,7 @@
 #     $ bzrpush project
 
 PROJECT=$1
-BZRFEED=/home/jrblevin/projects/bzr-feed/bzr-feed/bzr-feed.py
+BZRFEED="/usr/local/bin/bzr-feed.py"
 
 export HTTP_HOST=code.jblevins.org
 export SERVER_PORT=80
