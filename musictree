@@ -1,6 +1,0 @@
-#!/bin/sh
-#
-# Generates a listing all of my music files.
-
-tree -fin -o /archive/media/music/music.txt /archive/media/music
-

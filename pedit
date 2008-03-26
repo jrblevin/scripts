@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Edit a file while preserving the timestamp.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+
+touch -r $1 .$1.time
+$EDITOR $1
+touch -r .$1.time $1
+rm .$1.time
