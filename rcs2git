@@ -43,6 +43,10 @@
 #     you are the sole author of the RCS project and that you have
 #     correctly set your personal information in ~/.gitconfig.
 #
+# VERSION
+#
+#     1.00
+# 
 # LICENSE
 #
 #     Copyright (C) 2008 Jason Blevins <jrblevin@sdf.lonestar.org>
@@ -75,19 +79,22 @@ store_metadata() {
 import_revision() {
     file=$1
     rev=$2
-    time=$3
+    date=$3
+    time=$4
 
-    # RCS checkout
-    co -r$rev -f $file
+    echo "=== $file $rev $date $time"
+
+    # RCS checkout and log message
+    co -r$rev -f $file &>/dev/null
+    msg=$(rlog -r$rev $file | sed -n '/^date:/,$p' | tail -n +2 | head -n -1)
+    echo -e "$msg\n"
 
     # Git commit
-    GIT_AUTHOR_DATE="$DATE"
-    GIT_COMMITTER_DATE="$DATE"
+    GIT_AUTHOR_DATE="$date $time"
+    GIT_COMMITTER_DATE="$date $time"
     export GIT_AUTHOR_DATE GIT_COMMITTER_DATE
     git add $file
-
-    rlog -r$rev $file | sed -n '/^date:/,$p' | tail -n +2 | head -n -1 | \
-        git commit -q -a -F - || true
+    echo "$msg" | git commit -q -a -F - || true
 }
 
 # If no files are specified, search for all files under RCS control.
@@ -114,9 +121,8 @@ while read line; do
     file=$(echo $line | cut -f1 -d" ")
     rev=$(echo $line | cut -f2 -d" ")
     date=$(echo $line | cut -f3 -d" ")
-    time=$(echo $line | cut -f3 -d" ")
-    echo "=== Importing $file, revision $rev"
-    import_revision $file $rev $time
+    time=$(echo $line | cut -f4 -d" ")
+    import_revision $file $rev $date $time
 done < $meta
 
 # Remove the temporary file
