@@ -1,0 +1,111 @@
+#!/bin/sh
+# 
+# USAGE
+#
+#     rcs2git [FILES]
+# 
+# SUMMARY
+#
+#     Given an existing Git repository, this script imports the revision
+#     history of a collection of RCS-controlled files.
+#
+# SYNOPSIS
+#
+#     Import the RCS revision history at ~/rcs-proj into a new Git
+#     repository at ~/git-proj:
+#
+#         $ mkdir ~/git-proj
+#         $ cd ~/git-proj
+#         $ git init
+#         $ cp -r ~/rcs-proj/RCS .
+#         $ rcs2git
+#         $ rm -rf RCS
+#
+#     Since no files were listed, rcs2git imports all files which match
+#     *,v and RCS/*,v.
+#
+#     One can also import the history of a single RCS-controlled file
+#     into an existing Git repository.  Here, we only create a symbolic
+#     link to the RCS file:
+#
+#         $ cd ~/git-proj
+#         $ ln -s ~/rcs-proj/RCS/file.ext,v
+#         $ rcs2git file.ext
+#         $ rm file.ext,v
+#
+# NOTES
+#
+#     This script does not recurse into subdirectories.  It assumes that
+#     the RCS files (filename.ext,v) are present in the current
+#     directory or the RCS directory.
+#
+#     This script does not preserve author information.  It assumes that
+#     you are the sole author of the RCS project and that you have
+#     correctly set your personal information in ~/.gitconfig.
+#
+# Copyright (C) 2008 Jason Blevins <jrblevin@sdf.lonestar.org>
+
+
+# Outputs revision metadata in the form: file.ext 1.25 2008-03-30 19:24
+store_metadata() {
+    rlog $1 | sed -n "/^revision [0-9]*\.[0-9]*$/{
+    s/^revision //g
+    N
+    s/\n/ /
+    s/date: \([0-9 /]\{10\}\) \([0-9:]\{5\}\).*$/\1 \2/g
+    s/\//-/g
+    s/^/$1 /
+    p
+}"
+}
+
+# Imports a single revision into the Git repository.
+import_revision() {
+    file=$1
+    rev=$2
+    time=$3
+
+    # RCS checkout
+    co -r$rev -f $file
+
+    # Git commit
+    GIT_AUTHOR_DATE="$DATE"
+    GIT_COMMITTER_DATE="$DATE"
+    export GIT_AUTHOR_DATE GIT_COMMITTER_DATE
+    git add $file
+
+    rlog -r$rev $file | sed -n '/^date:/,$p' | tail -n +2 | head -n -1 | \
+        git commit -q -a -F - || true
+}
+
+# If no files are specified, search for all files under RCS control.
+# That is, all files matching *,v and RCS/*,v.
+if [[ $# < 1 ]]; then
+    FILES=`ls *,v RCS/*,v | sed -e 's/^\(RCS\/\)*\(.*\),v/\2/g'`
+else
+    FILES=$*
+fi
+
+# Create a temporary file for storing revision metadata
+meta="/tmp/rcs2git-$$"
+
+# Obtain revision metadata for each file
+for f in $FILES; do
+    store_metadata $f >> $meta
+done
+
+# Sort revision metadata by date (in place)
+sort -k3,4 -o $meta $meta
+
+# Process each revision
+while read line; do
+    file=$(echo $line | cut -f1 -d" ")
+    rev=$(echo $line | cut -f2 -d" ")
+    date=$(echo $line | cut -f3 -d" ")
+    time=$(echo $line | cut -f3 -d" ")
+    echo "=== Importing $file, revision $rev"
+    import_revision $file $rev $time
+done < $meta
+
+# Remove the temporary file
+rm $meta
