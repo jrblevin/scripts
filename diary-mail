@@ -7,5 +7,15 @@
 # Jason Blevins <jrblevin@sdf.lonestar.org>
 # Durham, August 16, 2006
 
-/usr/bin/emacs -batch -eval "(setq diary-mail-days 3 diary-file \"~/.diary\" diary-mail-addr \"jrblevin@sdf.lonestar.org\" diary-date-forms (append (quote((year \"-\" month \"-\" day \"[^/0-9]\")))) )" -l diary-lib -f diary-mail-entries >& /dev/null
-
+/usr/bin/emacs -batch -eval "(setq
+diary-mail-days 4
+diary-file \"~/.diary\"
+diary-mail-addr \"jrblevin@sdf.lonestar.org\"
+diary-date-forms
+    (quote ((year \"-\" month \"-\" day \"[^/0-9]\")
+            (month \"/\" day \"[^/0-9]\")
+            (month \"/\" day \"/\" year \"[^0-9]\")
+            (monthname \" *\" day \"[^,0-9]\")
+            (monthname \" *\" day \", *\" year \"[^0-9]\")
+            (dayname \"\\W\"))))" \
+    -l diary-lib -f diary-mail-entries >& /dev/null
