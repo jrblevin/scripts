@@ -100,7 +100,8 @@ import_revision() {
 # If no files are specified, search for all files under RCS control.
 # That is, all files matching *,v and RCS/*,v.
 if [[ $# < 1 ]]; then
-    FILES=`ls *,v RCS/*,v | sed -e 's/^\(RCS\/\)*\(.*\),v/\2/g'`
+    FILES=$(find . RCS/ -maxdepth 1 -name \*,v \
+        | while read F ; do echo $(basename $F ,v ) ; done | tr -s '\n' ' ')
 else
     FILES=$*
 fi
