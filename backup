@@ -50,5 +50,5 @@ shift 1
 for p in $@; do
     name=${p//\//_}
     snapshot $p $name
-    rotate $name
+    rotate $p $name
 done
