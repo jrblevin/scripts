@@ -1,0 +1,65 @@
+#!/bin/sh
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Chapel Hill, March 26, 2008
+#
+# Usage:
+#
+#     $ backup snapshot /archive/dir/ path [path...]
+#     $ backup rotate /archive/dir/ path [path...]
+#
+# http://www.sanitarium.net/golug/rsync_backups.html
+
+snapshot() {
+    echo "===== $1 ====="
+
+    # Use rsync to update the current copy
+    rsync -avHx --numeric-ids --delete $1/ $2-current/
+
+    # Create a snapshot tree of hard links
+    cp -al $2-current $2-`date +"%Y-%m-%d"`
+}
+
+
+rotate() {
+    if [[ "`date +%A`" == "Sunday" ]]; then
+        # Delete the weekly backup from four weeks ago unless it was the
+        # first sunday of the month.  If so, keep it as a monthly backup.
+        if [[ `date --date="-4 week" +"%d"` -gt 7 ]]; then
+            ymd=$(date --date="-4 week" +%Y-%m-%d)
+            echo "Deleting $ymd weekly $1 snapshot..."
+            rm -rf $2-$ymd
+        fi
+
+        # Delete the monthly backup from 12 months ago.
+        echo "Deleting $(date --date="-1 year" +"%B %Y") monthly $1 snapshot..."
+        rm -rf $2-`date --date="-1 year" +"%Y-%m-%d"`
+    else
+        # Delete the daily snapshot from a week ago.
+        ymd=$(date --date="-1 week" +%Y-%m-%d)
+        echo "Deleting $ymd daily $1 snapshot..."
+        rm -rf $2-$ymd
+    fi
+}
+
+
+ACTION=$1
+ARCHIVE=$2
+shift 2
+
+cd $ARCHIVE
+
+for p in $@; do
+    # Replace slashes with underscores
+    name=${p//\//_}
+
+    # Perform the selected action on each path
+    case "$ACTION" in
+        rotate)
+            rotate $name
+	    ;;
+        snapshot)
+	    snapshot $p $name
+	    ;;
+    esac
+done
