@@ -5,8 +5,7 @@
 #
 # Usage:
 #
-#     $ backup snapshot /archive/dir/ path [path...]
-#     $ backup rotate /archive/dir/ path [path...]
+#     $ backup /archive/dir/ path [path...]
 #
 # http://www.sanitarium.net/golug/rsync_backups.html
 
@@ -43,23 +42,13 @@ rotate() {
 }
 
 
-ACTION=$1
-ARCHIVE=$2
-shift 2
+# Change to the archive directory
+cd $1
+shift 1
 
-cd $ARCHIVE
-
+# Archive a snapshot of each path and rotate old snapshots
 for p in $@; do
-    # Replace slashes with underscores
     name=${p//\//_}
-
-    # Perform the selected action on each path
-    case "$ACTION" in
-        rotate)
-            rotate $name
-	    ;;
-        snapshot)
-	    snapshot $p $name
-	    ;;
-    esac
+    snapshot $p $name
+    rotate $name
 done
