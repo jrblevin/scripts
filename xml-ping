@@ -13,9 +13,12 @@ my $blog_name = 'Jason Blevins';
 my $blog_url  = 'http://jblevins.org/';
 	
 my %urls = (
-    'Technorati'   => 'http://rpc.technorati.com/rpc/ping',
-    'Google'       => 'http://blogsearch.google.com/ping/RPC2',
-    'weblogs.com'  => 'http://rpc.weblogs.com/RPC2',
+    'Technorati'     => 'http://rpc.technorati.com/rpc/ping',
+    'Google'         => 'http://blogsearch.google.com/ping/RPC2',
+    'weblogs.com'    => 'http://rpc.weblogs.com/RPC2',
+    'Moreover'       => 'http://api.moreover.com/RPC2',
+    'NewsGator'      => 'http://services.newsgator.com/ngws/xmlrpcping.aspx',
+    'Ping-o-Matic!'  => 'http://rpc.pingomatic.com/',
 );
 
 my $content = <<EOF;
