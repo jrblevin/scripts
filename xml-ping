@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+#
+# A dumb perl script for pinging Technorati, Google Blog Search, etc.
+#
+# Jason Blevins <jrblevin@sdf.lonestar.org>
+# Chapel Hill, November 14, 2008
+
+use strict;
+use warnings;
+require LWP::UserAgent;
+
+my $blog_name = 'Jason Blevins';
+my $blog_url  = 'http://jblevins.org/';
+	
+my %urls = (
+    'Technorati'   => 'http://rpc.technorati.com/rpc/ping',
+    'Google'       => 'http://blogsearch.google.com/ping/RPC2',
+    'weblogs.com'  => 'http://rpc.weblogs.com/RPC2',
+);
+
+my $content = <<EOF;
+<?xml version="1.0"?>
+<methodCall>
+  <methodName>weblogUpdates.ping</methodName>
+  <params>
+     <param><value>$blog_name</value></param>
+     <param><value>$blog_url</value></param>
+  </params>
+</methodCall>
+EOF
+
+foreach my $site (keys %urls) {
+    print "Pinging $site...";
+
+    my $req = HTTP::Request->new('POST', $urls{$site});
+    $req->content_type('text/xml');
+    $req->content($content);
+	
+    my $ua = LWP::UserAgent->new;
+    my $response = $ua->request($req)->as_string;
+
+    if ($response =~ m/Thanks for the ping/ or
+        $response =~ m/Thanks&#32;for&#32;the&#32;ping/) {
+        print "OK\n";
+    } else {
+        print "ERROR!\n\n$response\n";
+    }
+}
