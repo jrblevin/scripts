@@ -33,19 +33,12 @@ my $content = <<EOF;
 EOF
 
 foreach my $site (keys %urls) {
-    print "Pinging $site...";
+    print "Pinging $site...\n";
 
     my $req = HTTP::Request->new('POST', $urls{$site});
     $req->content_type('text/xml');
     $req->content($content);
 	
     my $ua = LWP::UserAgent->new;
-    my $response = $ua->request($req)->as_string;
-
-    if ($response =~ m/Thanks for the ping/ or
-        $response =~ m/Thanks&#32;for&#32;the&#32;ping/) {
-        print "OK\n";
-    } else {
-        print "ERROR!\n\n$response\n";
-    }
+    $ua->request($req);
 }
