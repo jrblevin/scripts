@@ -30,7 +30,7 @@ my $limit = 3;
 my $blocked_refs = '^(-|jblevins.org|jblevins.localhost)$';
 my $ignore_paths = join '|',
   qw(^/css/ ^/opensearch.xml ^/sitemap.xml ^/feeds ^/id ^/favicon.ico
-     \.jpg$ \.png$ \.svg$ ^/robots.txt ^/accum);
+     \.jpg$ \.png$ \.svg$ ^/robots.txt ^/accum ^/adsense.html);
 my $ignore_ua = join '|',
   qw(slurp Slurp Spider spider Bot bot crawler Wget);
 
