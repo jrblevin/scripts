@@ -27,7 +27,7 @@ use strict;
 my $baseurl = 'http://jblevins.org';
 my $limit = 3;
 
-my $blocked_refs = '^(-|jblevins.org|jblevins.localhost|www.esnips\.com)$';
+my $blocked_refs = '^(-|jblevins.org|jblevins.localhost|esnips\.com)$';
 my $ignore_paths = join '|',
   qw(^/css/ ^/opensearch.xml ^/sitemap.xml ^/feeds ^/id ^/favicon.ico
      \.jpg$ \.png$ \.svg$ ^/robots.txt ^/accum ^/adsense.html);
