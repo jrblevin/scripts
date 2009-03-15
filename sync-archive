@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# Synchronizes music, library, and references.  roark is
+# the master host.  For MP3 files, there are two symbolic
+# links which point to the incoming directories on each
+# respective host.
+
+# applications
+RSYNC=/usr/bin/rsync
+SSH=/usr/bin/ssh
+
+# hosts
+RHOST=roark
+
+# paths
+ARCHIVE=/archive
+MUSIC=${ARCHIVE}/media/music
+LIBRARY=${ARCHIVE}/library
+REFERENCES=${ARCHIVE}/references
+
+# push mp3-newton to roark
+$RSYNC -av -e $SSH $MUSIC/mp3-newton $RHOST:$MUSIC/
+
+# pull all music from roark
+$RSYNC -av -e $SSH $REMOTE:$MUSIC/ $MUSIC/
+
+# pull library from roark
+$RSYNC -av -e $SSH $REMOTE:$LIBRARY/ $LIBRARY/
+
+# pull references from roark
+$RSYNC -av -e $SSH $REMOTE:$REFERENCES/ $REFERENCES/
