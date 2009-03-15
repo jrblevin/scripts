@@ -22,10 +22,10 @@ REFERENCES=${ARCHIVE}/references
 $RSYNC -av -e $SSH $MUSIC/mp3-newton $RHOST:$MUSIC/
 
 # pull all music from roark
-$RSYNC -av -e $SSH $REMOTE:$MUSIC/ $MUSIC/
+$RSYNC -av -e $SSH $RHOST:$MUSIC/ $MUSIC/
 
 # pull library from roark
-$RSYNC -av -e $SSH $REMOTE:$LIBRARY/ $LIBRARY/
+$RSYNC -av -e $SSH $RHOST:$LIBRARY/ $LIBRARY/
 
 # pull references from roark
-$RSYNC -av -e $SSH $REMOTE:$REFERENCES/ $REFERENCES/
+$RSYNC -av -e $SSH $RHOST:$REFERENCES/ $REFERENCES/
