@@ -1,54 +1,74 @@
 #!/bin/sh
+
+# rsync backup script
 #
-# Jason Blevins <jrblevin@sdf.lonestar.org>
-# Chapel Hill, March 26, 2008
+# Copyright (C) 2008-2009 Jason Blevins <jrblevin@sdf.lonestar.org>
 #
-# Usage:
+# Usage: backup host path
 #
-#     $ backup /archive/dir/ path [path...]
+# Backups for $HOST are stored in the directory $BASE/$HOST where
+# $BASE is hard-coded below.  This script keeps the last 12 monthly
+# snapshots, four weekly snapshots, and seven daily snapshots.
 #
-# http://www.sanitarium.net/golug/rsync_backups.html
+# See also: http://www.sanitarium.net/golug/rsync_backups.html
+
+BASE=/home/backup/rsync
+
+RSYNC=/usr/bin/rsync
+SSH=/usr/bin/ssh
 
 snapshot() {
-    echo "===== $1 ====="
+    host=$1
+    path=$2
+    name=$3
+
+    echo "===== $host:$path ====="
 
     # Use rsync to update the current copy
-    rsync -avHx --numeric-ids --delete $1/ $2-current/
+    $RSYNC -avHx -e $SSH --numeric-ids --delete $host:$path/ $name-current/
 
     # Create a snapshot tree of hard links
-    cp -al $2-current $2-`date +"%Y-%m-%d"`
+    cp -al $name-current $name-`date +"%Y-%m-%d"`
 }
 
 
 rotate() {
+    host=$1
+    path=$2
+    name=$3
+
     if [[ "`date +%A`" == "Sunday" ]]; then
         # Delete the weekly backup from four weeks ago unless it was the
         # first sunday of the month.  If so, keep it as a monthly backup.
         if [[ `date --date="-4 week" +"%d"` -gt 7 ]]; then
             ymd=$(date --date="-4 week" +%Y-%m-%d)
-            echo "Deleting $ymd weekly $1 snapshot..."
-            rm -rf $2-$ymd
+            echo "Deleting $ymd weekly $host:$path snapshot..."
+            rm -rf $name-$ymd
         fi
 
         # Delete the monthly backup from 12 months ago.
-        echo "Deleting $(date --date="-1 year" +"%B %Y") monthly $1 snapshot..."
-        rm -rf $2-`date --date="-1 year" +"%Y-%m-%d"`
+        echo "Deleting $(date --date="-1 year" +"%B %Y") monthly $host:$path snapshot..."
+        rm -rf $name-`date --date="-1 year" +"%Y-%m-%d"`
     else
         # Delete the daily snapshot from a week ago.
         ymd=$(date --date="-1 week" +%Y-%m-%d)
-        echo "Deleting $ymd daily $1 snapshot..."
-        rm -rf $2-$ymd
+        echo "Deleting $ymd daily $host:$path snapshot..."
+        rm -rf $name-$ymd
     fi
 }
 
 
-# Change to the archive directory
-cd $1
-shift 1
+# Store the hostname and path
+host=$1
+path=$2
 
-# Archive a snapshot of each path and rotate old snapshots
-for p in $@; do
-    name=${p//\//_}
-    snapshot $p $name
-    rotate $p $name
-done
+# replace slashes with underscores
+name=${path//\//_}
+
+# Change to the archive directory (make it if needed)
+mkdir -p $BASE/$host
+cd $BASE/$host
+
+# Archive a snapshot the path and rotate old snapshots
+snapshot $host $path $name
+rotate $host $path $name
