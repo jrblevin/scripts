@@ -19,13 +19,13 @@ LIBRARY=${ARCHIVE}/library
 REFERENCES=${ARCHIVE}/references
 
 # push mp3-newton to roark
-$RSYNC -av -e $SSH $MUSIC/mp3-newton $RHOST:$MUSIC/
+$RSYNC -av -e $SSH --delete $MUSIC/mp3-newton $RHOST:$MUSIC/
 
 # pull all music from roark
-$RSYNC -av -e $SSH $RHOST:$MUSIC/ $MUSIC/
+$RSYNC -av -e $SSH --delete $RHOST:$MUSIC/ $MUSIC/
 
 # pull library from roark
-$RSYNC -av -e $SSH $RHOST:$LIBRARY/ $LIBRARY/
+$RSYNC -av -e $SSH --delete $RHOST:$LIBRARY/ $LIBRARY/
 
 # pull references from roark
-$RSYNC -av -e $SSH $RHOST:$REFERENCES/ $REFERENCES/
+$RSYNC -av -e $SSH --delete $RHOST:$REFERENCES/ $REFERENCES/
