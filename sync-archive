@@ -21,6 +21,9 @@ REFERENCES=${ARCHIVE}/references
 # push mp3-newton to roark
 $RSYNC -av -e $SSH --delete $MUSIC/mp3-newton $RHOST:$MUSIC/
 
+# push flac-newton to roark
+$RSYNC -av -e $SSH --delete $MUSIC/flac-newton $RHOST:$MUSIC/
+
 # pull all music from roark
 $RSYNC -av -e $SSH --delete $RHOST:$MUSIC/ $MUSIC/
 
