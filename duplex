@@ -2,15 +2,44 @@
 
 # duplex: A manual duplex printing script.  Currently works only
 # with PDF files.  Requires pdftops and psselect, part of the
-# psutils Debian package.
+# psutils Debian package.  Skip the first page (e.g., a JSTOR title
+# page) when the -1 option is given.
 #
-# Usage: duplex document.pdf
+# Usage: duplex [-1] document.pdf
 #
-# Jason Blevins <jrblevin@sdf.lonestar.org>
-# Durham, March 30, 2006
+# Copyright (C) 2006-2009 Jason Blevins
 
-echo "Printing even pages..."
-pdftops $1 - | psselect -e | lpr
-read -n 1 -p "Press a key to print odd pages..."
-pdftops $1 - | psselect -o | lpr
+function print_ps {
+    file=$1
+    even=$2
+    odd=$3
+    echo "Printing even pages..."
+    echo "CMD: psselect $even $1 | lpr"
+    psselect $even $1 | lpr
+    read -n 1 -p "Press a key to print odd pages..."
+    echo "Printing odd pages..."
+    psselect $odd $1 | lpr
+}
 
+if [ "$1" == "-1" ]; then
+    even="-p2- -o"
+    odd="-p2- -e"
+    shift
+else
+    even="-e"
+    odd="-o"
+fi
+
+filename=$1
+
+# Handle both PDF and PostScript files
+if [ $(expr match "$filename" '.*\.ps') != 0 ]; then
+    echo "PostScript file detected..."
+    print_ps "$filename" "$even" "$odd"
+elif [ $(expr match "$filename" '.*\.pdf') != 0 ]; then
+    echo "PDF file detected..."
+    tmp=/tmp/duplex-$$.ps
+    pdftops $filename $tmp
+    print_ps "$tmp" "$even" "$odd"
+    rm $tmp
+fi
