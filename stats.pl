@@ -6,13 +6,13 @@
 #
 # Usage: perl stats.pl /var/log/apache/access.log > stats.text
 #
-# Copyright (C) 2008 Jason Blevins <jrblevin@sdf.lonestar.org>
+# Copyright (C) 2008-2009 Jason Blevins
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 2 of the
 # License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -43,6 +43,7 @@ my %link = (
     'delicious.com'       => 'http://delicious.com/',
     'del.icio.us'         => 'http://delicious.com/',
     'live.com'            => 'http://www.live.com/',
+    'bing.com'            => 'http://www.bing.com/',
     'wikipedia.org'       => 'http://en.wikipedia.org/',
     'fsdaily.com'         => 'http://www.fsdaily.com/',
 );
@@ -113,8 +114,8 @@ foreach my $file (@ARGV) {
             $browser{'Internet Explorer'}++;
 #        } elsif ($ua =~ 'Opera') {
 #            $browser{'Opera'}++;
-#        } elsif ($ua =~ 'Chrome') {
-#            $browser{'Chrome'}++;
+        } elsif ($ua =~ 'Chrome') {
+            $browser{'Chrome'}++;
         } elsif ($ua =~ 'Safari') {
             $browser{'Safari'}++;
 #         } elsif ($ua =~ 'Konqueror') {
