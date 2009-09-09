@@ -14,7 +14,6 @@ function print_ps {
     even=$2
     odd=$3
     echo "Printing even pages..."
-    echo "CMD: psselect $even $1 | lpr"
     psselect $even $1 | lpr
     read -n 1 -p "Press a key to print odd pages..."
     echo "Printing odd pages..."
