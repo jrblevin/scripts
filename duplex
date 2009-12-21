@@ -14,10 +14,10 @@ function print_ps {
     even=$2
     odd=$3
     echo "Printing even pages..."
-    psselect $even $1 | lpr
+    psselect $even "$1" | lpr
     read -n 1 -p "Press a key to print odd pages..."
     echo "Printing odd pages..."
-    psselect $odd $1 | lpr
+    psselect $odd "$1" | lpr
 }
 
 if [ "$1" == "-1" ]; then
@@ -38,7 +38,7 @@ if [ $(expr match "$filename" '.*\.ps') != 0 ]; then
 elif [ $(expr match "$filename" '.*\.pdf') != 0 ]; then
     echo "PDF file detected..."
     tmp=/tmp/duplex-$$.ps
-    pdftops $filename $tmp
+    pdftops "$filename" "$tmp"
     print_ps "$tmp" "$even" "$odd"
-    rm $tmp
+    rm "$tmp"
 fi
