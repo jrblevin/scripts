@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# usage: contact <pattern>
+
+FILE=$HOME/projects/gtd/contacts.txt
+
+grep -v '^#' $FILE | awk "
+BEGIN { RS=ORS=\"\n\n\"; FS=OFS=\"\n\" }
+/$1/ { print }"
