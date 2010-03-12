@@ -1,0 +1,9 @@
+#!/bin/sh
+
+TMP=/tmp/mdprint-$$.pdf
+PREAMBLE=$HOME/config/app/pandoc/preamble.tex
+
+rm -f $TMP
+markdown2pdf -H $PREAMBLE -o $TMP $1
+duplex $TMP
+rm -f $TMP
