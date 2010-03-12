@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# run a recoll query
+recoll -t -l -q "$@" | \
+    # skip the first two lines
+    tail -n +3 | \
+    # strip everything but the filename
+    sed -e 's/.*\[file:\/\/\([^]]*\)\].*/\1/' | \
+    # replace common prefixes
+    sed -e 's/^\/home\/jrblevin/~/'
