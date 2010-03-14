@@ -85,8 +85,9 @@ function sort_changed {
 # Perform a regexp search for a site.  Copy the password of the first
 # site found to the clipboard and, optionally, print it.
 function find_site {
-    # Decrypt pwfile, regexp-search for $1, and split the first result.
-    items=( $( echo $password | $decrypt | grep $1 | head -n 1 ) )
+    # Decrypt pwfile, regexp-search for $1 (ignoring comments), and
+    # split the first result.
+    items=( $( echo $password | $decrypt | grep $1 | grep -v '^#' | head -n 1 ) )
 
     if [[ -n $opt_verbose ]]; then
         # Print the metadata: group.site, uri
@@ -147,8 +148,8 @@ function add_site {
 
 # Obtain a list of sites that match regexp.
 function filter {
-    # Decrypt pwfile and regexp-search for $1
-    echo $password | $decrypt | awk '{print $1}' | grep $1
+    # Decrypt pwfile and regexp-search for $1, ignoring comment lines
+    echo $password | $decrypt | awk '{print $1}' | grep $1 | grep -v '^#'
 }
 
 
