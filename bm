@@ -41,7 +41,7 @@ add() {
     rm -f $tmp
 
     read -n 1 -p "Edit bookmarks file? [y/N]: " yesno
-    if  [ $yesno == "y" ]; then
+    if  [ "$yesno" == "y" ]; then
         edit
     fi
 }
