@@ -72,7 +72,10 @@ publish() {
     echo "</p>"
     echo ""
     echo "<dl>"
-    cat $FILE | sed -e 's/&/&amp;/g' | \
+    cat $FILE | \
+        sed -e 's/&/\&amp;/g' | \
+        sed -e 's/</\&lt;/g' | \
+        sed -e 's/>/\&gt;/g' | \
         awk -F"\t" '{
             printf("  <dt><a href=\"%s\" rel=\"nofollow\">%s</a>", $2, $4);
             printf(" <span class=\"meta\">(%s %s)</span></dt>\n",
