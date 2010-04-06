@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# playlist-stats -- generates my musical profile from mpdlogger output
+#
+# Copyright (C) 2010 Jason R. Blevins
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms
+# of the three-clause BSD license.
+
+FILE="$HOME/.playlist.txt"
+
+print_top() {
+    title=$1
+    filter=$2
+    format=$3
+    count=$4
+    echo "## $title"
+    echo ""
+    cat $FILE | awk -F"\t" "$filter { print $format }" | sort | uniq -c | \
+        sort -nr | head -$count | \
+        awk '{ printf("%d. ", NR);
+               for (i=2;i<=NF;i++) printf("%s ", $i);
+               printf("(%d)\n", $1); }'
+    echo ""
+}
+
+# get first timestamp
+initial=$(head -1 $FILE | awk -F"\t" '{ print $1 }')
+
+# print header
+echo "title: Music Profile"
+echo "created: April 6, 2010 15:05 EDT"
+echo "modified: " $(date +"%B %e, %Y %H:%M:%S %Z")
+echo "markup: markdown"
+echo ""
+
+# print intro
+echo -n "Automatically generated on "
+echo $(date +"%B %e, %Y at %l:%M %p %Z")
+echo -n "based on tracks played since "
+echo $(date --date="@$initial" +"%B %e, %Y.")
+echo ""
+
+# most recently played
+echo "## Most Recently Played Tracks"
+echo ""
+cat $FILE | tail -20 | awk -F"\t" '{ print 20-NR+1 ". " $3 " - " $2 }' | tac
+echo ""
+
+# top 20 artists (filter: none; format: artist)
+print_top "Favorite Artists" '' '$3' 20
+
+# top 20 tracks (filter: none; format: artist - track)
+print_top "Favorite Tracks" '' '$3 " - " $2' 20
+
+# top 20 albums (filter: nonempty album; format: artist - album)
+print_top "Favorite Albums" '$4 != ""' '$3 " - " $4' 20
