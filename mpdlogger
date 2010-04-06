@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# modlogger.sh -- logs songs played by mpd to a tab-delimited text file
+#
+# Copyright (C) 2010 Jason R. Blevins
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms
+# of the BSD license.  See the LICENSE file for details.
+#
+# Dependencies: mpd, mpc, and grep.
+
+# Output filename
+if [[ -n $MPDLOGGER_FILE ]]; then
+    file=$MPDLOGGER_FILE
+else
+    file=$HOME/playlist.txt
+fi
+
+# Poll interval in seconds
+if [[ -n $MPDLOGGER_INTERVAL ]]; then
+    interval=$MPDLOGGER_INTERVAL
+else
+    interval=60
+fi
+
+# Previously playing song
+previous=$RANDOM
+
+while true
+do
+    current=$(mpc --format "\t%title%\t%artist%\t%album%" | grep "^\s")
+    if [ -n "$current" ]; then
+        if [ "$current" != "$previous" ]; then
+            echo $(date +%s) "$current" >> $file
+            previous="$current"
+        fi
+    fi
+    sleep $interval
+done
