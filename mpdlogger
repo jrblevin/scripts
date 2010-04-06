@@ -14,7 +14,7 @@
 if [[ -n $MPDLOGGER_FILE ]]; then
     file=$MPDLOGGER_FILE
 else
-    file=$HOME/playlist.txt
+    file=$HOME/.playlist.txt
 fi
 
 # Poll interval in seconds
