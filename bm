@@ -26,7 +26,7 @@ add() {
     url=$1
 
     echo "Fetching $url..."
-    title=$( wget -q -O - "$url" | sed -n -e 's/.*<title>\(.*\)<\/title>.*/\1/p;' )
+    title=$( wget -q -O - "$url" | sed -n -e 's/.*<title>\(.*\)<\/title>.*/\1/ip;' )
     title=$title
 
     echo "Date: $time"
