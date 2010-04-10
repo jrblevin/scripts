@@ -5,7 +5,8 @@ SITE=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/
 #TARBALL=firefox-3.7a1pre.en-US.linux-x86_64.tar.bz2
 #TARBALL=firefox-3.7a2pre.en-US.linux-x86_64.tar.bz2
 #TARBALL=firefox-3.7a3pre.en-US.linux-$ARCH.tar.bz2
-TARBALL=firefox-3.7a4pre.en-US.linux-$ARCH.tar.bz2
+#TARBALL=firefox-3.7a4pre.en-US.linux-$ARCH.tar.bz2
+TARBALL=firefox-3.7a5pre.en-US.linux-$ARCH.tar.bz2
 
 cd /tmp
 rm $TARBALL
