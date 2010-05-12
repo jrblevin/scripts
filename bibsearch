@@ -10,4 +10,4 @@
 #
 # Created: Durham, June 21, 2006
 
-bibtool -r auxextract -- "select{\"$*\"}"
+bibtool -- "select{\"$*\"}"
