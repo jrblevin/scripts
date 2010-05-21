@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # rsync backup script
 #
@@ -16,6 +16,7 @@ BASE=/home/backup/rsync
 
 RSYNC=/usr/bin/rsync
 SSH=/usr/bin/ssh
+SELF=$(hostname)
 
 snapshot() {
     host=$1
@@ -25,7 +26,13 @@ snapshot() {
     echo "===== $host:$path ====="
 
     # Use rsync to update the current copy
-    $RSYNC -avHx -e $SSH --numeric-ids --delete $host:$path/ $name-current/
+    if [[ "$host" == "$SELF" ]]; then
+        # local backup
+        $RSYNC -avHx --numeric-ids --delete $path/ $name-current/
+    else
+        # remote backup via SSH
+        $RSYNC -avHx -e $SSH --numeric-ids --delete $host:$path/ $name-current/
+    fi
 
     # Create a snapshot tree of hard links
     cp -al $name-current $name-`date +"%Y-%m-%d"`
