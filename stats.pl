@@ -180,9 +180,9 @@ my @ref_sort = sort { $referrer{$b} <=> $referrer{$a} } keys %referrer;
 
 # Format results
 my @browser_list = 
-  map("    " . linkify($_) . " (" . share($browser{$_}, $num_visitors) . ")", @browser_sort);
+  map("    " . $_ . " (" . share($browser{$_}, $num_visitors) . ")", @browser_sort);
 my @os_list = 
-  map("    " . linkify($_) . " (" . share($os{$_}, $num_visitors) . ")", @os_sort);
+  map("    " . $_ . " (" . share($os{$_}, $num_visitors) . ")", @os_sort);
 my @path_list =
   map("    " . linkify($_) . " (" . share($path{$_}, $page_hits) . ")", @path_sort);
 my @ref_list =
