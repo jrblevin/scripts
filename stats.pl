@@ -58,7 +58,7 @@ my %escape = (
 my $escape_re = join '|' => keys %escape;
 
 # Combined format log regular expressions.
-my $log_re = qr/^(\S+) (\S+) (\S+) \[([^\]\[]+)\] \"([^"]*)\" (\S+) (\S+) \"?(.*?)\"? \"([^"]*)\"/;
+my $log_re = qr/^(\S+) (\S+) (\S+) \[([^\]\[]+)\] \"(.*?)\" (\S+) (\S+) \"?(.*?)\"? \"(.*?)\"/;
 my $time_re = qr#^(\d{2})/(\w{3})/(\d{4}):(\d{2}):(\d{2}):(\d{2}) ([+-])(\d{2})(\d{2})$#;
 
 my ($page_hits, $feed_hits, $bytes, %referrer, %path, %os, %browser,
