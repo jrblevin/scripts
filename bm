@@ -8,6 +8,7 @@
 #
 # [1:time] [2:url] [3:tags] [4:title] [5:description]
 
+# Configuration
 FILE=$HOME/config/app/bookmarks.txt
 OUTPUT=$HOME/projects/jblevins.org/links/assorted.text
 
@@ -58,18 +59,12 @@ search() {
 }
 
 publish() {
-    echo "title: Assorted Links"
+    echo "title: Bookmarks"
     echo "created: March 30, 2010 00:22 EDT"
     echo "modified: " $(date +"%B %d, %Y %H:%M:%S %Z")
     echo "markup: xhtml"
     echo ""
-    echo "<p>"
-    echo "Below are some links which I found useful or interesting at some point."
-    echo "This page is my decidedly anti-social, simplified alternative to the new"
-    echo "wave of social bookmarking sites.  Instead, these links are stored in a"
-    echo "plain text file and processed using a simple"
-    echo "<a href=\"/git/scripts.git/plain/bm\">shell script</a>."
-    echo "</p>"
+    echo "<p>Assorted links with tags in reverse chronological order.</p>"
     echo ""
     echo "<dl>"
     cat $FILE | \
@@ -83,9 +78,9 @@ publish() {
             if ($5) printf("  <dd>%s </dd>\n", $5);
             printf("\n"); }'
     echo "</dl>"
-    echo "<p class=\"meta\">Top tags:"
+    echo ""
+    echo "<p>Top 25 tags:"
     cat $FILE | awk -F"\t" '{ print $3 }' | sed 's/ /\n/g' | sort | uniq -c | sort -n -r | head -n 25
-    echo "</p>"
 }
 
 case "$1" in
