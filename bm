@@ -81,6 +81,7 @@ publish() {
     echo ""
     echo "<p>Top 25 tags:"
     cat $FILE | awk -F"\t" '{ print $3 }' | sed 's/ /\n/g' | sort | uniq -c | sort -n -r | head -n 25
+    echo "</p>"
 }
 
 case "$1" in
