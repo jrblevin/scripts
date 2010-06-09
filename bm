@@ -10,7 +10,7 @@
 
 # Configuration
 FILE=$HOME/config/app/bookmarks.txt
-OUTPUT=$HOME/projects/jblevins.org/links/assorted.text
+OUTPUT=$HOME/projects/jblevins.org/links/index.text
 
 usage() {
     echo "Usage:"
