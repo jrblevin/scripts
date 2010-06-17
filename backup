@@ -12,7 +12,7 @@
 #
 # See also: http://www.sanitarium.net/golug/rsync_backups.html
 
-BASE=/home/backup/rsync
+BASE=/backup/rsync
 
 RSYNC=/usr/bin/rsync
 SSH=/usr/bin/ssh
