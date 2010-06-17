@@ -2,7 +2,7 @@
 
 # rsync backup script
 #
-# Copyright (C) 2008-2009 Jason Blevins <jrblevin@sdf.lonestar.org>
+# Copyright (C) 2008-2010 Jason Blevins <jrblevin@sdf.org>
 #
 # Usage: backup host path
 #
