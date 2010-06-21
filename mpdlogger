@@ -37,7 +37,7 @@ export MPD_PORT=$port
 
 while true
 do
-    current=$(mpc --format "\t%title%\t%artist%\t%album%" | grep "^\s")
+    current=$(mpc --format "\t%title%\t%artist%\t%album%" | grep "^	")
     if [ -n "$current" ]; then
         if [ "$current" != "$previous" ]; then
             echo $(date +%s) "$current" >> $file
