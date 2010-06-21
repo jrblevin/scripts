@@ -10,6 +10,10 @@
 #
 # Dependencies: mpd, mpc, and grep.
 
+# Configuration
+host=127.0.0.1
+port=6600
+
 # Output filename
 if [[ -n $MPDLOGGER_FILE ]]; then
     file=$MPDLOGGER_FILE
@@ -26,6 +30,10 @@ fi
 
 # Previously playing song
 previous=$RANDOM
+
+# Set MPD environment variables
+export MPD_HOST=$host
+export MPD_PORT=$port
 
 while true
 do
