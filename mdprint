@@ -2,8 +2,9 @@
 
 TMP=/tmp/mdprint-$$.pdf
 PREAMBLE=$HOME/config/app/pandoc/preamble.tex
+LPOPTIONS="-o Duplex=DuplexNoTumble -o PreFilter=No"
 
 rm -f $TMP
 markdown2pdf -H $PREAMBLE -o $TMP $1
-duplex $TMP
+pdftops $TMP - | lpr $LPOPTIONS
 rm -f $TMP
