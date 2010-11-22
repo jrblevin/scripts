@@ -5,6 +5,13 @@ PREAMBLE=$HOME/config/app/pandoc/preamble.tex
 LPOPTIONS="-o Duplex=DuplexNoTumble -o PreFilter=No"
 
 rm -f $TMP
-markdown2pdf -H $PREAMBLE -o $TMP $1
+
+if [[ -n "$1" ]] ; then
+    markdown2pdf -H $PREAMBLE -o $TMP $1
+else
+    cat | markdown2pdf -H $PREAMBLE -o $TMP
+fi
+
 pdftops $TMP - | lpr $LPOPTIONS
+
 rm -f $TMP
