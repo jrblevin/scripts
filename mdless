@@ -1,0 +1,11 @@
+#!/bin/sh
+
+rm -f $tmp
+
+file=""
+if [[ -n "$1" ]] ; then
+   file=$1
+fi
+
+# Convert from Markdown to HTML using Pandoc and view with w3m
+cat $file | pandoc -s -r markdown -w html -o - | w3m -T text/html
