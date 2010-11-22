@@ -2,7 +2,7 @@
 
 TMP=/tmp/mdprint-$$.pdf
 PREAMBLE=$HOME/config/app/pandoc/preamble.tex
-LPOPTIONS="-o Duplex=DuplexNoTumble -o PreFilter=No"
+LPOPTIONS="-o sides=two-sided-long-edge"
 
 rm -f $TMP
 
