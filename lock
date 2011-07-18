@@ -1,0 +1,70 @@
+#!/bin/sh
+#
+# A simple time management script that blocks all internet traffic to
+# the domains listed in $BLOCK_FILE for a specified number of minutes.
+# All chains are flushed upon completion of the timer.  In general,
+# this script should be run as root (e.g., using sudo) and must be
+# placed in root's path (e.g., /usr/local/bin).
+#
+# Copyright (C) 2011 Jason R. Blevins
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation  and/or other materials provided with the distribution.
+# 3. Neither the names of the copyright holders nor the names of any
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+BLOCK_FILE=$HOME/.block_domains
+
+start() {
+    # Block outgoing connections to given websites
+    while read d; do
+        iptables -A INPUT -s $d -j DROP
+        iptables -A OUTPUT -d $d -j DROP
+    done < $BLOCK_FILE
+
+    # Scheduled stop
+    echo "$0 stop" | at now + $1 minutes &> /dev/null
+
+    # Print ending time
+    date --date="+$1 minutes" +"Unlocking at %H:%M..."
+
+    exit 1
+}
+
+stop() {
+    iptables -F
+    beep
+    exit 1
+}
+
+command=$1
+
+case "$1" in
+    stop)
+        stop
+	;;
+    *)
+        start $1
+	;;
+esac
+
+exit 0
