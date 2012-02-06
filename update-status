@@ -1,0 +1,75 @@
+#!/bin/bash
+
+OS=`uname -s`
+
+_hostname() {
+    echo "hostname=`hostname -s`&";
+}
+
+_ip() {
+    if [[ $OS == "Darwin" ]]; then
+        ip=$(/sbin/ifconfig en0 | grep -v inet6 | grep "inet" | awk '{print $2}')
+    elif [[ $OS == "Linux" ]]; then
+        ip=$(/sbin/ifconfig eth0 | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}')
+    fi
+    echo "ip=$ip&"
+}
+
+_cpu() {
+    if [[ $OS == "Darwin" ]]; then
+        model=$(sysctl -n machdep.cpu.brand_string)
+        cores=$(sysctl -n machdep.cpu.core_count)
+    elif [[ $OS == "Linux" ]]; then
+        model=$(cat /proc/cpuinfo | grep 'model name' | head -1 | cut -d " " -f 3-)
+        cores=$(cat /proc/cpuinfo | grep cores | head -1 | cut -d " " -f 3)
+    fi
+    model=$(echo $model | sed -e 's/(R)//g; s/(TM)//g; s/CPU//g; s/  */ /g')
+    echo "cpu=$model&cores=$cores&"
+}
+
+_uptime() {
+    u=`uptime`
+    load=`echo $u | sed -e 's/^.*average[s]*: \([0-9]*\.[0-9]*\).*$/\1/'`
+    echo "load=$load&"
+}
+
+_df() {
+    df=$(df -kPl  | grep "^/" | awk '{print $2, $3, $6}')
+    i=1
+    echo "$df" | while read size used mount
+    do
+        size=$(echo "scale=2; $size/1048576" | bc -l )
+        used=$(echo "scale=2; $used/1048576" | bc -l )
+        echo -n "fs${i}=$mount&fs${i}_size=$size&fs${i}_used=$used&"
+        i=$((i+1))
+    done
+}
+
+_memory() {
+    if [[ $OS == "Darwin" ]]; then
+        free_mem=$(vm_stat | grep free | awk '{ print $3 }' | sed 's/\.//')
+        free_mem=$(((free_mem*4096)/1024))
+        total_mem=$(sysctl -n hw.memsize)
+        total_mem=$((total_mem/1024))
+    elif [[ $OS == "Linux" ]]; then
+        free_mem=`free | grep "buffers/cache" | awk '{ print $4 }'`
+        total_mem=`free | grep "Mem:" | awk '{ print $2 }'`
+    fi
+    free_mem=$(echo "scale=2; $free_mem/1048576" | bc -l )
+    total_mem=$(echo "scale=2; $total_mem/1048576" | bc -l )
+    echo -n "free_mem=$free_mem&total_mem=$total_mem&"
+}
+
+_who() {
+    users=$(who | cut -d " " -f 1 | uniq)
+    echo -n "users=$(echo $users | tr -d '\n')&"
+    echo -n "num_users=$(echo $users | wc -l | tr -d ' ')&"
+}
+
+_time() {
+    date +"time=%b %e %H:%M"
+}
+
+str=$(_hostname)$(_ip)$(_cpu)$(_uptime)$(_df)$(_memory)$(_who)$(_time)
+str=$(echo $str | sed -e 's/ /+/g')
+curl "http://jblevins.org/status/update.cgi?$str"
