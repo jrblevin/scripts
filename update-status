@@ -73,4 +73,4 @@ _time() {
 
 str=$(_hostname)$(_ip)$(_cpu)$(_uptime)$(_df)$(_memory)$(_who)$(_time)
 str=$(echo $str | sed -e 's/ /+/g')
-curl "http://jblevins.org/status/update.cgi?$str"
+curl -s "http://jblevins.org/status/update.cgi?$str"
