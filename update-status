@@ -22,7 +22,7 @@ _cpu() {
         cores=$($SYSCTL -n machdep.cpu.core_count)
     elif [[ $OS == "Linux" ]]; then
         model=$(cat /proc/cpuinfo | grep 'model name' | head -1 | cut -d " " -f 3-)
-        cores=$(cat /proc/cpuinfo | grep cores | head -1 | cut -d " " -f 3)
+        cores=$(cat /proc/cpuinfo | grep processor | wc -l)
     fi
     model=$(echo $model | sed -e 's/(R)//g; s/(TM)//g; s/(tm)//g; s/CPU//g; s/Processor//g; s/Intel//g; s/AMD//g; s/  */ /g')
     echo "cpu=$model&cores=$cores&"
