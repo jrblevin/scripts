@@ -1,0 +1,6 @@
+#!/bin/sh
+
+BASE=/opt/cluster/src
+
+cd $BASE/gcc-build
+make install

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+BASE=/opt/cluster/src
+
+cd $BASE/gcc
+svn update
+rm -rf $BASE/gcc-build
+mkdir $BASE/gcc-build
+cd $BASE/gcc-build
+../gcc/configure --prefix=/opt/cluster/gcc-trunk --disable-multilib --enable-languages=c,fortran
+make -j 12
