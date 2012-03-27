@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# http://www.linuxforums.org/forum/newbie/130605-how-find-directory-biggest-number-files.html#post739891
+
+if [ -n "$1" ]; then
+    DIR="$1"
+else
+    DIR="`pwd`"
+fi
+
+find "$DIR" -type d | while read dir; do
+    echo `ls -A "$dir" | wc -l` "$dir"
+done | sort -nr
