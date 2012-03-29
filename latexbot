@@ -15,33 +15,24 @@ PATH_FILE="$HOME/.latexbot"
 TIMESTAMP_FILE="$HOME/.latexbot-timestamp"
 LATEX="pdflatex -interaction=nonstopmode"
 
-while read path
-do
+while read path; do
     if [ -d "$path" ]; then
-        # This path is a directory containing LaTeX files
         cd $path
         for file in *.tex; do
-            # If any .tex file has changed, recompile it
             if [ "$file" -nt $TIMESTAMP_FILE ]; then
                 $LATEX "$file"
             fi
         done
     elif [ -f "$path" ]; then
-        # This path is a master LaTeX file
         dir=$(dirname $path)
         file=$(basename $path)
         cd $dir
-        changed=0
         for other in *.tex; do
-            # If any .tex file has changed, set the changed flag
             if [ "$other" -nt $TIMESTAMP_FILE ]; then
-                changed=1
+                $LATEX "$file"
+                break
             fi
         done
-        # If any .tex file has changed, recompile the master file
-        if [ "$changed" -gt 0 ]; then
-            $LATEX "$file"
-        fi
     fi
 done < $PATH_FILE
 touch $TIMESTAMP_FILE
