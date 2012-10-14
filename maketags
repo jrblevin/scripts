@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # Maintains a tree of symbolic link tags for BibTeX entries.
 #
@@ -35,7 +35,7 @@ use Text::BibTeX;
 use File::Path qw(make_path);
 
 my $archive = $ENV{"HOME"} . "/archive";
-my $bib = $ENV{"HOME"} . "/projects/research/research.bib";
+my $bib = $ENV{"HOME"} . "/gtd/research.bib";
 
 my $bibfile = new Text::BibTeX::File "$bib"
   or die "research.bib: $!\n";
@@ -64,17 +64,20 @@ while (my $entry = new Text::BibTeX::Entry $bibfile) {
                 }
 
                 if ($ext) {
-                    my $tags = $entry->get('tags');
+                    my $tags = $entry->get('keywords');
 
                     if ($tags) {
-                        my @tagarr = split(/[ 	]/, $tags);
+                        my @tagarr = split(/[,;]/, $tags);
 
                         foreach my $tag (@tagarr) {
+                            $tag =~ s/^\s+//;
+                            $tag =~ s/\s+$//;
+                            $tag =~ s/[ ]/-/g;
+                            $tag = lc($tag);
                             print "Tagging $key as $tag\n";
-
                             my $tagdir = "$archive/tags/$tag";
                             make_path($tagdir) unless (-d $tagdir);
-                            my $fn = "$archive/$dir/$key.$ext";
+                            my $fn = "../../$dir/$key.$ext";
                             my $linkfn = "$tagdir/$key.$ext";
                             symlink $fn, $linkfn;
                         }
