@@ -1,5 +1,8 @@
 #!/bin/sh
 
+EMAIL=jrblevin@sdf.org
+HOSTNAME=$(hostname)
+
 imap_login() {
     FILE=/var/log/mail.info
     test -f $FILE && cat $FILE | \
@@ -34,6 +37,10 @@ lookup() {
     echo "$1\t$LOOKUP_RES"
 }
 
-for IP in $(all_ips | sort | uniq); do
-    lookup $IP;
-done
+lookup_all () {
+    for IP in $(all_ips | sort | uniq); do
+        lookup $IP;
+    done
+}
+
+lookup_all | mail -s "Access List for $HOSTNAME" $EMAIL
