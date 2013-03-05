@@ -2,6 +2,7 @@
 
 EMAIL=jrblevin@sdf.org
 HOSTNAME=$(hostname)
+EXCLUDE="192.168.1.\|econ.ohio-state.edu\|columbus.res.rr.com\|myvzw.com\|dsl.wotnoh.sbcglobal.net"
 
 imap_login() {
     FILE=/var/log/mail.info
@@ -43,4 +44,7 @@ lookup_all () {
     done
 }
 
-lookup_all | mail -s "Access List for $HOSTNAME" $EMAIL
+MESSAGE=$(lookup_all | grep -v "$EXCLUDE")
+if [ -n "$MESSAGE" ]; then
+  echo $MESSAGE | mail -s "Access List for $HOSTNAME" $EMAIL
+fi
