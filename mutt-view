@@ -57,8 +57,11 @@
 #
 # Local modifications by Jason Blevins <jrblevin@sdf.org>
 
+# secure permissions
+umask 077
+
 # the tmp directory to use.
-tmpdir="$HOME/tmp/mutt-view"
+tmpdir="/tmp/mutt-view"
 
 # the name of the debug file if debugging is turned on.
 debug_file=$tmpdir/debug
