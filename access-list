@@ -2,7 +2,7 @@
 
 EMAIL=jrblevin@sdf.org
 HOSTNAME=$(hostname)
-EXCLUDE="192.168.1.\|econ.ohio-state.edu\|osuwireless.ohio-state.edu\|columbus.res.rr.com\|myvzw.com\|dsl.wotnoh.sbcglobal.net\|insight.res.rr.com"
+EXCLUDE="192.168.1.\|econ.ohio-state.edu\|osuwireless.ohio-state.edu\|columbus.res.rr.com\|myvzw.com\|dsl.wotnoh.sbcglobal.net\|insight.res.rr.com\|central.biz.rr.com"
 
 imap_login() {
     FILE=/var/log/mail.info
