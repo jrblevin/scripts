@@ -32,10 +32,13 @@ fi
 filename=$1
 
 # Handle both PDF and PostScript files
-if [ $(expr match "$filename" '.*\.ps') != 0 ]; then
+base=$(basename "$filename")
+ext="${base##*.}"
+echo "Extension: $ext"
+if [ $ext = "ps" ]; then
     echo "PostScript file detected..."
     print_ps "$filename" "$even" "$odd"
-elif [ $(expr match "$filename" '.*\.pdf') != 0 ]; then
+elif [ $ext = "pdf" ]; then
     echo "PDF file detected..."
     tmp=/tmp/duplex-$$.ps
     pdftops "$filename" "$tmp"
