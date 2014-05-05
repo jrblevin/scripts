@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# rsync clone script
+#
+# Copyright (C) 2013 Jason Blevins <jrblevin@sdf.org>
+#
+# Usage: clone-osx <source> <destination>
+#
+# See also: http://nicolasgallagher.com/mac-osx-bootable-backup-drive-with-rsync/
+
+# Configuration
+SELF=$0
+RSYNC=/usr/bin/rsync
+EXCLUDES=\
+    --exclude=".Spotlight-*/" \
+    --exclude=".Trashes" \
+    --exclude="/tmp/*" \
+    --exclude="/Network/*" \
+    --exclude="/cores/*" \
+    --exclude="/afs/*" \
+    --exclude="/automount/*" \
+    --exclude="/private/tmp/*" \
+    --exclude="/private/var/run/*" \
+    --exclude="/private/var/spool/postfix/*" \
+    --exclude="/private/var/vm/*" \
+    --exclude="/Previous Systems.localized" \
+    --exclude="/Volumes/*" \
+    --exclude="*/.Trash" \
+
+# Store source and backup
+SOURCE=$1
+CLONE=$2
+
+# Clone
+$RSYNC -avHxS --extended-attributes --delete "$SOURCE" "$CLONE"
+
+# Make the clonse bootable
+bless -folder "$CLONE"/System/Library/CoreServices

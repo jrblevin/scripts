@@ -1,0 +1,14 @@
+#!/bin/bash
+
+LOCK=/var/run/unison-sync.lock
+UNISON=/opt/local/bin/unison
+
+if [[ -f $LOCK ]]; then
+    echo "Unison already running, skipping this run."
+else
+    touch $LOCK
+    $UNISON -batch -silent data
+    $UNISON -batch -silent public
+    $UNISON -batch -silent media
+    rm $LOCK
+fi

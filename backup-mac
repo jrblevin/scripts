@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Set tool paths
+RSYNC=/opt/local/bin/rsync
+RSYNC_EXC=/usr/local/lib/rsync_excludes_osx.txt
+TMUTIL=/usr/bin/tmutil
+#CP=/opt/local/bin/gcp
+
+# Extra verbosity flags, if required
+VRBFLAGS="-v"
+#VRBFLAGS="--dry-run -v -v -v -v --progress"
+
+# Set backup targets
+DATE=$(date +"%Y%m%dT%H%M%S")
+BACKUP="/Volumes/Backup"
+SRC="/Volumes/Data"
+CUR="$BACKUP/current"
+DST="$BACKUP/$DATE"
+
+# Shutdown time machine if it's running
+$TMUTIL disable
+
+# Change to backup directory
+pushd "$BACKUP" > /dev/null
+
+# Run backup, using hard links for unchanged files
+$RSYNC \
+  $VRBFLAGS \
+  --archive \
+  --hard-links \
+  --one-file-system \
+  --delete \
+  --exclude-from=$RSYNC_EXC \
+  $SRC/ $CUR/
+
+# Copy previous backup using hard links
+if [[ ! -d $DST ]]; then
+    mkdir "$DST"
+fi
+pushd "$CUR" > /dev/null
+find . -print | cpio -dpl "$DST"
+popd > /dev/null
+
+# Copy previous backup using hard links
+#${CP} -al "$CUR" "$DST"
+
+# Remove old backups.  Keep all monthly backups, four weekly backups,
+# seven daily backups, and 24 hourly backups.
+if [[ "`date +%A`" == "Sunday" && "$(date +%H)" == "07" ]]; then
+    # Delete the weekly backup from four weeks ago unless it was the
+    # first sunday of the month, then keep it as a monthly backup.
+    if [[ $(date -v-4w +"%d") -gt 7 ]]; then
+        ymdh=$(date -v-4w "+%Y%m%dT%H")
+        echo "Deleting ${ymdh} weekly backup..."
+        rm -rf ${ymdh}*
+    fi
+elif [[ "$(date +%H)" == "07" ]]; then
+    # Delete the daily snapshot from one ago week ago.
+    ymdh=$(date -v-1w +"%Y%m%dT%H")
+    echo "Deleting ${ymdh} daily backup..."
+    rm -rf ${ymdh}*
+else
+    # Delete the hourly snapshot from yesterday.
+    ymdh=$(date -v-1d +"%Y%m%dT%H")
+    echo "Deleting ${ymdh} hourly backup..."
+    rm -rf ${ymdh}*
+fi
+
+# Re-enable time machine
+${TMUTIL} enable
+
+# Move back to original working directory
+popd > /dev/null
+
