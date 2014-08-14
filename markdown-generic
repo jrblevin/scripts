@@ -1,0 +1,339 @@
+#!/usr/bin/env perl
+#
+# markdown-generic -- a script for processing Markdown documents,
+# applying several pre- and post-processing steps.
+#
+# Copyright (c) 2007-2014 Jason R. Blevins <jrblevin@sdf.org>
+# All rights reserved.
+
+# License
+# -------
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. Neither the name of the University nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+
+# Syntax Highlighting
+# -------------------
+#
+# The script searches for blocks of the form
+#
+#     <pre><code lang="perl">
+#     ...
+#     </code></pre>
+#
+# and processes the content using GNU Source-highlight.  The lang
+# attribute can be any language recognized by source-highlight.  The
+# output is a <pre><code> block where keywords, comments, etc. are
+# wrapped in <span> tags with the corresponding class names.  A
+# stylesheet can be modeled after the examples in the source-highlight
+# manual available at
+# <http://www.gnu.org/software/src-highlite/source-highlight.html>.
+#
+# Notes:
+#
+# For Pandoc-style fenced code blocks, use the following regexp
+# and change the highlight parameters from ($1, $2) to ($2, $3).
+#
+# my $code_re = qr{([~]+) { \.([^\}]+) }(.*?)\1[~]*}s;
+
+# Usage
+# -----
+#
+#    markdown-generic < foo.text > foo.html
+
+use strict;
+use warnings;
+use IPC::Open2;
+
+# Markdown configuration
+my $command = '/usr/local/bin/peg-markdown --smart --notes';
+my $extensions = 1;
+
+# Metadata configuration
+my $meta_prefix = '';
+
+# itex2MML configuration
+my $itex2mml = '/usr/local/bin/itex2MML';
+
+# Set $use_meta to 1 to use Blosxom's meta plug-in to determine which posts
+# itex should process, using a "meta-math: itex" header.  If it's set to 0
+# (the default), itex will process all entries.
+my $itex_use_meta = 1;
+
+# Set to 1 to enable numbering of \[..\] style equations.  Set to 0 to
+# disable this.
+my $itex_num_equations = 1;
+
+# Regular expressions
+my $fenced_pre_re = qr{([~]+)\s*\n(.*?)\n\1[~]*}s;
+my $fenced_code_re = qr{([~]+)\s*{:\s*lang=(\w+)\s*}\s*\n(.*?)\n\1[~]*}s;
+my $wiki_link_re = qr{(^|.)(\[\[([^]!|][^]|]*)(|([^]]+))?\]\])}s;
+my $ws_re = qr{[ \t\n]*};
+my $code_re = qr{<pre>$ws_re<code${ws_re}lang="([^"]*)">(.*?)</code>$ws_re</pre>}s;
+
+# Metadata storage
+my %meta;
+
+# meta - process metadata in header
+sub meta {
+    my $content = shift;
+
+    my ($body, $in_body);
+    foreach (split /\n/, $content) {
+        if ($in_body) {
+            $body .= "$_\n";
+        }
+        elsif (/^$meta_prefix(\w+)\s*:\s*(.+)$/) {
+            my $key = $1;
+            my $value = $2;
+            if (not $key) {
+                $in_body = 1;
+                last;
+            }
+            $meta{$key} = $value;
+        }
+        else {
+            $in_body = 1;
+            $body .= "$_\n";
+        }
+    }
+
+    return $body;
+}
+
+# markdown_extensions -- apply various Markdown extension to the content
+sub markdown_extensions {
+    my $content = shift;
+
+    # Meta title
+    if (defined $meta{'title'}) {
+        $content = "<h1>$meta{'title'}</h1>\n$content";
+    }
+
+    # Header id attributes (loop from 6 to 1)
+    my $h = '######';
+    while ($h ne '') {
+        my $i = length($h);
+        $content =~ s!^$h\s+(.+)\s+{:\s*#([\w\.:-]+)\s*}!<h$i id="$2">$1</h$i>!gm;
+        $h =~ s/^#//;
+    }
+
+    # Fenced code blocks with lang attributes
+    $content =~ s!$fenced_code_re!<pre><code lang="$2">$3\n</code></pre>!g;
+
+    # Fenced pre blocks without lang attributes
+    $content =~ s!$fenced_pre_re!<pre>$2\n</pre>!g;
+
+    # Wiki Links
+    $content =~ s!$wiki_link_re!wiki_link($1, $2, $3, $5)!eg;
+
+    return $content;
+}
+
+# process_wiki_links -- handle converting wiki links to HTML links
+sub wiki_link {
+    my $pre = shift;
+    my $all = shift;
+    my $link = shift;
+    my $url = shift;
+
+    # For unaliased links, use link text as URL
+    $url = $link unless $url;
+
+    # Determine filename
+    my $filename = "$url.text";
+
+    # Check for escape
+    my $result;
+    if ($pre eq "\\") {
+        $result = $all;
+    } else {
+        # Check for existence of file
+        if (-e $filename) {
+            $result = "<a class=\"wiki\" href=\"$url\">$link</a>";
+        } else {
+            $result = "<span class=\"wiki-missing\">$link</span>";
+        }
+    }
+
+    return $result;
+}
+
+# filter_content -- pipe content through the specified command
+sub filter_content {
+    my $command = shift;
+    my $content = shift;
+
+    local(*IN, *OUT);
+
+    my $pid = open2(*IN, *OUT, $command);
+    die("Unable to open $command") unless $pid;
+
+    # Workaround for perl bug (#376329)
+    require Encode;
+    $content = Encode::encode_utf8($content);
+
+    print OUT $content;
+    close OUT;
+
+    local $/ = undef;
+    $content = <IN>;
+    close IN;
+
+    waitpid $pid, 0;
+
+    return Encode::decode_utf8($content);
+}
+
+sub highlight {
+    # Syntax-highlighting subroutine
+    my $language = shift;
+    my $content = shift;
+
+    # Find source-highlight binary, use cat as fallback
+    my $command = '/bin/cat';
+    my @paths = ('/opt/local/bin/source-highlight',
+                 '/usr/local/bin/source-highlight',
+                 '/usr/bin/source-highlight');
+    foreach (@paths) {
+        if (-e $_) {
+            $command = $_;
+            last;
+        }
+    }
+
+    # Filter the content using GNU source-highlight
+    $command = "$command -s $language -f xhtml-css";
+    $content = filter_content($command, $content);
+
+    # Change <tt> to <code lang="foo">
+    $content =~ s!<tt>!<code lang="$language">!;
+    $content =~ s!</tt>!</code>!;
+
+    return $content;
+};
+
+sub itex {
+    my $body = shift;
+    $body =~ s/\r//g;
+    $body = itex_number_equations($body) if $itex_num_equations;
+    my ($reader, $outfile) = tempfile( UNLINK => 1 );
+    my ($writer, $infile) = tempfile( UNLINK => 1 );
+    print $writer "$body";
+    system("$itex2mml < $infile > $outfile");
+    my @out = <$reader>;
+    close $reader;
+    close $writer;
+    eval { unlink ($infile, $outfile); };
+    return join('', @out);
+}
+
+sub itex_number_equations {
+    my $body = shift;
+
+    my $prefix = "eq";
+    my $eqcls = "numbered-eq";
+    my $numcls = "eq-number";
+
+    my %eqnumber;
+    my $eqno=1;
+
+    # add equation numbers to \[...\]
+    #  - introduce a wrapper-<div> and a <span> with the equation number
+    while ($body =~ s/\\\[(.*?)\\\]/\n\n<div class=\"$eqcls\"><span class="$numcls">\($eqno\)<\/span>\$\$$1\$\$<\/div>\n\n/s) {
+	$eqno++;
+    }
+
+    # assemble equation labels into a hash
+    # - remove the \label{} command, collapse surrounding whitespace
+    # - add an ID to the wrapper-<div>. prefix it to give a fighting chance
+    #   for the ID to be unique
+    # - hash key is the equation label, value is the equation number
+    while ($body =~ s/<div class=\"$eqcls\"><span class=\"$numcls\">\((\d+)\)<\/span>\$\$((?:[^\$]|\\\$)*)\s*\\label{(\w*)}\s*((?:[^\$]|\\\$)*)\$\$<\/div>/<div class=\"$eqcls\" id=\"$prefix:$3\"><span class=\"$numcls\">\($1\)<\/span>\$\$$2$4\$\$<\/div>/s) {
+	$eqnumber{"$3"} = $1;
+    }
+
+    # add cross-references
+    # - they can be either (eq:foo) or \eqref{foo}
+    $body =~ s/\(eq:(\w+)\)/\(<a href=\"#$prefix:$1\">$eqnumber{"$1"}<\/a>\)/g;
+    $body =~ s/\\eqref\{(\w+)\}/\(<a href=\'#$prefix:$1\'>$eqnumber{"$1"}<\/a>\)/g;
+
+    return $body;
+}
+
+sub itex_remove_annotations {
+    my $body = shift;
+    $body =~ s!<annotation encoding='application/x-tex'>.*?</annotation>!!gis;
+    return $body;
+}
+
+# post_markdown_filter -- applied after Markdown processing
+sub post_markdown_filter {
+    my $content = shift;
+
+    # Syntax highlighting of code blocks
+    $content =~ s{$code_re}{&highlight($1, $2)}eg;
+
+    # Tweak peg-markdown footnote presentation
+    $content =~ s!<hr/>\n<ol id="notes">!<hr class="footnotes"/>\n<ol class="footnotes">!g;
+
+    # Tweak peg-markdown footnotes
+    $content =~ s!\<li id="fn(.*?)"\>!<li id="fn-$blosxom::fn-$1">!g;
+    $content =~ s!\<a href="#fnref([0-9]+)" title="Jump back to reference"\>\[back\]\</a\>!<a href="#fnref-$blosxom::fn-$1" title="Jump back to reference">&#8617;</a>!g;
+
+    # Tweak peg-markdown footnote references
+    $content =~ s!\<a class="noteref" id="fnref([0-9]+)" href="#fn\1" title="Jump to note \1"\>\[\1\]\</a\>!<a class="noteref" id="fnref-$blosxom::fn-$1" href="#fn-$blosxom::fn-$1" title="Jump to footnote $1">$1</a>!g;
+
+    return $content;
+}
+
+
+# Slurp stdin
+my $text; {
+    local $/;
+    $text = <>;
+}
+
+# Process and strip metadata
+$text = meta($text);
+
+# Process with itex2MML
+if ((!$itex_use_meta) or
+    (defined($meta{'math'}) and ($meta{'math'} =~ /^\s*itex\s*$/i))) {
+    $text = itex($text);
+    $text = itex_remove_annotations($text);
+}
+
+# Preprocess markdown extensions
+if ($extensions) {
+    $text = markdown_extensions($text);
+}
+
+# Process with markdown
+$text = filter_content($command, $text);
+
+# Markdown post-processing
+$text = post_markdown_filter($text);
+
+print $text;
