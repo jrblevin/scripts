@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Usage: daysbetween "August 20, 2014" "February 6, 2015"
+
+OS=`uname -s`
+if [[ $OS == "Darwin" ]]; then
+   DATE=gdate
+elif [[ $OS == "Linux" ]]; then
+   DATE=date
+fi
+
+echo $(( ($($DATE --date="$2" +%s) - $($DATE --date="$1" +%s) )/(60*60*24) ))
