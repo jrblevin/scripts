@@ -2,7 +2,7 @@
 
 # rsync backup script
 #
-# Copyright (C) 2008-2010 Jason Blevins <jrblevin@sdf.org>
+# Copyright (C) 2008-2016 Jason Blevins <jrblevin@sdf.org>
 #
 # Usage: backup host path
 #
@@ -12,9 +12,17 @@
 #
 # See also: http://www.sanitarium.net/golug/rsync_backups.html
 
-BASE=/backup/rsync
+# Location of backup files
+BASE=/backup
+
+# Excluded files (e.g., extremely large files that change often)
+# Example: --exclude pattern1 --exclude pattern2
+EXCLUDE="--exclude .sync --exclude .dropbox.cache --exclude .dropbox --exclude .dropbox-dist"
 
 RSYNC=/usr/bin/rsync
+REMOTE_RSYNC=/usr/local/bin/rsync
+RSYNC_OPTS="-avHAXx --numeric-ids --delete $EXCLUDE --rsync-path $REMOTE_RSYNC"
+#RSYNC_OPTS="-n -avHx --delete $EXCLUDE"
 SSH=/usr/bin/ssh
 SELF=$(hostname)
 
@@ -28,10 +36,10 @@ snapshot() {
     # Use rsync to update the current copy
     if [[ "$host" == "$SELF" ]]; then
         # local backup
-        $RSYNC -avHx --numeric-ids --delete $path/ $name-current/
+        $RSYNC $RSYNC_OPTS $path/ $name-current/
     else
         # remote backup via SSH
-        $RSYNC -avHx -e $SSH --numeric-ids --delete $host:$path/ $name-current/
+        $RSYNC $RSYNC_OPTS -e $SSH $host:$path/ $name-current/
     fi
 
     # Create a snapshot tree of hard links
