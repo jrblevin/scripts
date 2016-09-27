@@ -2,8 +2,8 @@
 
 EMAIL=jrblevin@sdf.org
 HOSTNAME=$(hostname)
-EXCLUDE_IP="192.168.1.\\|128.146.137.52\\|207.254.73.13\\|2605:a000:111a:8003:1471:2f69:a083\\|2620:0:1a10:409d"
-EXCLUDE_HOST="econ.ohio-state.edu\\|osuwireless.ohio-state.edu\\|columbus.res.rr.com\\|myvzw.com\\|dsl.wotnoh.sbcglobal.net\\|insight.res.rr.com\\|central.biz.rr.com"
+EXCLUDE_IP="192\.168\.1\.\\|128\.146\.137\.52\\|207\.254\.73\.13\\|75\.118\.98\."
+EXCLUDE_HOST="econ.ohio-state.edu\\|osuwireless.ohio-state.edu\\|col\.wideopenwest\.com\\|myvzw.com\\|dsl.wotnoh.sbcglobal.net\\|insight.res.rr.com\\|central.biz.rr.com"
 
 imap_login() {
     FILE=/var/log/mail.info
