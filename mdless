@@ -1,11 +1,25 @@
 #!/bin/sh
 
-rm -f $tmp
-
-file=""
+# Use stdin unless a file is specified
+file="-"
 if [[ -n "$1" ]] ; then
    file=$1
 fi
 
 # Convert from Markdown to HTML using Pandoc and view with w3m
-cat $file | pandoc -s -r markdown -w html -o - | w3m -T text/html
+#cat $file | pandoc -s -r markdown -w html -o - | w3m -T text/html
+
+# Create a temporary file
+self=`basename $0`
+tmp=`mktemp -q /tmp/${self}.XXXXXX`
+if [ $? -ne 0 ]; then
+    echo "$0: Can't create temp file, exiting..."
+    exit 1
+fi
+
+# Convert from Markdown and view with man
+cat $file | pandoc -s -r markdown -w man -o $tmp
+man $tmp
+
+# Clean up
+rm $tmp
